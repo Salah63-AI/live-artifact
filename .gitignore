@@ -1,0 +1,7 @@
+# Personal OS holds private vault notes, CV and brand files: never publish it
+personal-os - template/
+
+.claude/settings.local.json
+.env
+.env.*
+.DS_Store
