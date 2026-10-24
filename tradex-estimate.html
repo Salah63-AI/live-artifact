@@ -94,6 +94,17 @@ h1 {
 .msg.is-error { color: var(--bad); }
 .msg.is-ok { color: var(--teal-text); }
 
+/* Show / hide password */
+.pw-wrap { position: relative; display: block; }
+.pw-wrap input { padding-right: 2.9rem; }
+.pw-eye {
+  position: absolute; right: 4px; top: 50%; transform: translateY(-50%);
+  width: 2.25rem; height: 2.25rem; display: inline-flex; align-items: center; justify-content: center;
+  border: 0; border-radius: 6px; background: transparent; color: var(--ink-soft); cursor: pointer; padding: 0;
+}
+.pw-eye:hover { color: var(--ink); }
+.pw-eye svg { width: 20px; height: 20px; }
+
 /* Status bar */
 .status { position: fixed; left: 50%; bottom: 1.25rem; transform: translateX(-50%); z-index: 10;
   background: var(--ink); color: var(--paper); padding: .6rem 1rem; border-radius: 8px; font-size: .9rem; max-width: calc(100% - 32px); }
@@ -204,12 +215,24 @@ footer.built { margin-top: 4rem; padding-top: 1.25rem; border-top: 1px solid var
     <p>Estimates and prices are private to Tradex editors. Use the same account as the project flow page.</p>
     <form id="auth-form">
       <label class="field">Email<input type="email" name="email" autocomplete="email" required></label>
-      <label class="field">Password<input type="password" name="password" autocomplete="current-password" minlength="8" required></label>
+      <label class="field" id="pw-field">Password<input type="password" name="password" autocomplete="current-password" minlength="8" required></label>
       <div class="form-actions">
         <button class="btn btn-primary" type="submit" id="auth-submit">Sign in</button>
         <button class="btn btn-link" type="button" id="auth-toggle">Create an account</button>
+        <button class="btn btn-link" type="button" id="auth-forgot">Forgot password?</button>
       </div>
       <p class="msg" id="auth-msg" role="status"></p>
+    </form>
+  </section>
+
+  <section class="auth" id="recover" hidden>
+    <h2>Set a new password</h2>
+    <p>You opened a password reset link. Choose a new password for <b id="recover-email"></b>.</p>
+    <form id="recover-form">
+      <label class="field">New password<input type="password" name="password" autocomplete="new-password" minlength="8" required></label>
+      <label class="field">Repeat new password<input type="password" name="confirm" autocomplete="new-password" minlength="8" required></label>
+      <div class="form-actions"><button class="btn btn-primary" type="submit" id="recover-submit">Save new password</button></div>
+      <p class="msg" id="recover-msg" role="status"></p>
     </form>
   </section>
 
@@ -321,8 +344,14 @@ function say(text, isError) {
   clearTimeout(statusTimer);
   statusTimer = setTimeout(() => { s.hidden = true; }, isError ? 8000 : 2500);
 }
+const OFFLINE = "Can't reach the Tradex database. Check your internet connection and try again. If it keeps failing, the Supabase project may be paused (the free plan pauses it when idle) and needs to be restored.";
+function isNetworkError(error) {
+  return !!error && (error.name === "AuthRetryableFetchError" || /failed to fetch|networkerror|load failed|fetch failed/i.test(error.message || ""));
+}
+function authError(error) { return isNetworkError(error) ? OFFLINE : error.message; }
 function explain(error) {
   if (!error) return "";
+  if (isNetworkError(error)) return OFFLINE;
   if (error.code === "PGRST301" || /JWT/i.test(error.message)) return "Your session ended. Sign in again.";
   if (error.code === "42501") return "This account isn't allowed to change that.";
   if (error.code === "23505") return "That code is already in the price list.";
@@ -337,34 +366,104 @@ async function run(promise, okText) {
   return data ?? true;
 }
 
+/* ---------- show / hide password ---------- */
+const EYE = '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M2 12s3.5-7 10-7 10 7 10 7-3.5 7-10 7S2 12 2 12z"/><circle cx="12" cy="12" r="3"/></svg>';
+const EYE_OFF = '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M9.9 4.24A9.1 9.1 0 0 1 12 4c6.5 0 10 7 10 7a17.6 17.6 0 0 1-2.16 3.19M6.6 6.6A17.4 17.4 0 0 0 2 12s3.5 7 10 7a9.7 9.7 0 0 0 5.4-1.6"/><path d="M9.9 9.9a3 3 0 0 0 4.2 4.2"/><path d="M2 2l20 20"/></svg>';
+function setPasswordVisible(input, btn, visible) {
+  input.type = visible ? "text" : "password";
+  btn.innerHTML = visible ? EYE_OFF : EYE;
+  btn.setAttribute("aria-label", visible ? "Hide password" : "Show password");
+  btn.setAttribute("aria-pressed", String(visible));
+  btn.title = visible ? "Hide password" : "Show password";
+}
+for (const input of document.querySelectorAll('input[type="password"]')) {
+  const wrap = el("span", "pw-wrap");
+  input.replaceWith(wrap); wrap.append(input);
+  const btn = el("button", "pw-eye"); btn.type = "button";
+  setPasswordVisible(input, btn, false);
+  btn.addEventListener("click", () => { setPasswordVisible(input, btn, input.type === "password"); input.focus(); });
+  wrap.append(btn);
+  // never leave a password showing once the form is sent or reset
+  input.form.addEventListener("submit", () => setPasswordVisible(input, btn, false));
+  input.form.addEventListener("reset", () => setPasswordVisible(input, btn, false));
+}
+
 /* ---------- auth ---------- */
-let signUpMode = false;
-$("auth-toggle").addEventListener("click", () => {
-  signUpMode = !signUpMode;
-  $("auth-title").textContent = signUpMode ? "Create an account" : "Sign in";
-  $("auth-submit").textContent = signUpMode ? "Create account" : "Sign in";
-  $("auth-toggle").textContent = signUpMode ? "I already have an account" : "Create an account";
-  $("auth-form").password.autocomplete = signUpMode ? "new-password" : "current-password";
+let authMode = "signin"; // signin | signup | reset
+function setAuthMode(mode) {
+  authMode = mode;
+  const f = $("auth-form");
+  $("auth-title").textContent = { signin: "Sign in", signup: "Create an account", reset: "Reset your password" }[mode];
+  $("auth-submit").textContent = { signin: "Sign in", signup: "Create account", reset: "Send reset link" }[mode];
+  $("auth-toggle").textContent = mode === "signin" ? "Create an account" : "Back to sign in";
+  $("auth-forgot").hidden = mode !== "signin";
+  $("pw-field").hidden = mode === "reset";
+  f.password.required = mode !== "reset";
+  f.password.autocomplete = mode === "signup" ? "new-password" : "current-password";
   $("auth-msg").textContent = "";
-});
+}
+$("auth-toggle").addEventListener("click", () => setAuthMode(authMode === "signin" ? "signup" : "signin"));
+$("auth-forgot").addEventListener("click", () => setAuthMode("reset"));
 $("auth-form").addEventListener("submit", async e => {
   e.preventDefault();
   const f = e.target, msg = $("auth-msg");
   const creds = { email: f.email.value.trim(), password: f.password.value };
-  $("auth-submit").disabled = true; msg.className = "msg"; msg.textContent = signUpMode ? "Creating account…" : "Signing in…";
-  const { data, error } = signUpMode ? await db.auth.signUp(creds) : await db.auth.signInWithPassword(creds);
+  $("auth-submit").disabled = true; msg.className = "msg";
+  msg.textContent = { signin: "Signing in…", signup: "Creating account…", reset: "Sending reset link…" }[authMode];
+  if (authMode === "reset") {
+    // the link comes back to this page; a file:// page can't be a redirect target, so Supabase falls back to its Site URL
+    const opts = /^https?:$/.test(location.protocol) ? { redirectTo: location.origin + location.pathname } : {};
+    const { error } = await db.auth.resetPasswordForEmail(creds.email, opts);
+    $("auth-submit").disabled = false;
+    if (error) { msg.className = "msg is-error"; msg.textContent = authError(error); return; }
+    setAuthMode("signin");
+    msg.className = "msg is-ok";
+    msg.textContent = "If " + creds.email + " has an account, a reset link is on its way. Open it in this browser to choose a new password.";
+    return;
+  }
+  const { data, error } = authMode === "signup" ? await db.auth.signUp(creds) : await db.auth.signInWithPassword(creds);
   $("auth-submit").disabled = false;
-  if (error) { msg.className = "msg is-error"; msg.textContent = error.message; return; }
-  if (signUpMode && !data.session) {
+  if (error) {
+    msg.className = "msg is-error";
+    msg.textContent = error.code === "invalid_credentials" ? "Wrong email or password. Use Forgot password? to set a new one." : authError(error);
+    return;
+  }
+  if (authMode === "signup" && !data.session) {
+    setAuthMode("signin");
     msg.className = "msg is-ok";
     msg.textContent = "Account created. Open the confirmation email, then come back and sign in.";
-    $("auth-toggle").click();
   }
   f.password.value = "";
 });
 $("sign-out").addEventListener("click", () => db.auth.signOut());
 
+$("recover-form").addEventListener("submit", async e => {
+  e.preventDefault();
+  const f = e.target, msg = $("recover-msg");
+  if (f.password.value !== f.confirm.value) { msg.className = "msg is-error"; msg.textContent = "The two passwords don't match."; return; }
+  $("recover-submit").disabled = true; msg.className = "msg"; msg.textContent = "Saving…";
+  const { error } = await db.auth.updateUser({ password: f.password.value });
+  $("recover-submit").disabled = false;
+  if (error) { msg.className = "msg is-error"; msg.textContent = authError(error); return; }
+  f.reset(); msg.textContent = "";
+  state.recovering = false;
+  say("Password changed. You're signed in.");
+  const { data } = await db.auth.getSession();
+  onSession(data.session);
+});
+
+// a reset link that failed (expired or already used) comes back with the reason in the URL hash
+{
+  const hash = new URLSearchParams(location.hash.slice(1));
+  if (hash.get("error_description")) {
+    $("auth-msg").className = "msg is-error";
+    $("auth-msg").textContent = "That reset link didn't work (" + hash.get("error_description") + "). Use Forgot password? to get a new one.";
+    history.replaceState(null, "", location.pathname + location.search);
+  }
+}
+
 db.auth.onAuthStateChange((event, session) => {
+  if (event === "PASSWORD_RECOVERY") state.recovering = true;
   // defer: supabase-js warns against awaiting other calls inside this callback
   setTimeout(() => onSession(session), 0);
 });
@@ -376,6 +475,12 @@ async function onSession(session) {
   $("who").textContent = user ? user.email : "";
   $("sign-out").hidden = !user;
   $("gate-msg").hidden = true;
+  $("recover").hidden = !(user && state.recovering);
+  if (user && state.recovering) {
+    $("auth").hidden = true; $("app").hidden = true;
+    $("recover-email").textContent = user.email;
+    return;
+  }
   if (!user) { $("app").hidden = true; $("auth").hidden = false; return; }
   $("auth").hidden = true;
   const { data, error } = await db.from("editors").select("email").maybeSingle();
