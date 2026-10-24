@@ -25,7 +25,7 @@ The Supabase project for this folder is **live artifact** (ref `laiyvalsyzetqylo
 
 `tradex-project-flow.html` is a single-file app (logo inlined as a data URI, supabase-js from jsDelivr) for Tradex's estimate-to-billing flow. **Supabase is the source of truth**: the page signs in with email + password, then reads and writes the tables below. Editing a step, adding a project or logging a month happens in the page, not in the HTML.
 
-Database (`public` schema, created by migrations `core_tables`, `change_log`, `editor_access`):
+Database (`public` schema). Each migration applied to Supabase is mirrored as `supabase/migrations/<version>_<name>.sql`, using the version Supabase assigned (see `supabase_migrations.schema_migrations`); `supabase/seed.sql` holds the starting phases and steps. When changing the schema, apply it with `apply_migration` and add the matching file. Keep editor emails out of these files, since the repo is public.
 - `phases` (`is_loop` marks the monthly cycle drawn as the loop) and `steps` (ordered by `position` within a phase; `short_label` is the two-line diagram label).
 - `projects` and `progress_entries` (one row per project per month, `period` = first of month). The view `progress_summary` computes `cost_pct`, `gap_pts`, `needs_review` (gap > 10 pts) and `invoice_amount` = (final % minus the highest earlier final %) × contract value.
 - `change_log`: the `log_change()` trigger records every insert, update and delete on the four tables with full old and new rows, so any change can be traced or restored from SQL.
