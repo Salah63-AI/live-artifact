@@ -23,7 +23,7 @@ The Supabase project for this folder is **live artifact** (ref `laiyvalsyzetqylo
 
 ## Root deliverables
 
-`tradex-project-flow.html` is a single-file app (logo inlined as a data URI, supabase-js from jsDelivr) for Tradex's estimate-to-billing flow. **Supabase is the source of truth**: the page signs in with email + password, then reads and writes the tables below. Editing a step, adding a project or logging a month happens in the page, not in the HTML.
+`tradex-flow.html` is a single-file app (logo inlined as a data URI, supabase-js from jsDelivr) for Tradex's estimate-to-billing flow. **Supabase is the source of truth**: the page signs in with email + password, then reads and writes the tables below. Editing a step, adding a project or logging a month happens in the page, not in the HTML.
 
 Database (`public` schema). Each migration applied to Supabase is mirrored as `supabase/migrations/<version>_<name>.sql`, using the version Supabase assigned (see `supabase_migrations.schema_migrations`); `supabase/seed.sql` holds the starting phases and steps. When changing the schema, apply it with `apply_migration` and add the matching file. Keep editor emails out of these files, since the repo is public.
 - `phases` (`is_loop` marks the monthly cycle drawn as the loop) and `steps` (ordered by `position` within a phase; `short_label` is the two-line diagram label).
