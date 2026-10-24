@@ -1,6 +1,7 @@
 {
   "$schema": "https://openapi.vercel.sh/vercel.json",
   "rewrites": [
-    { "source": "/", "destination": "/tradex-flow.html" }
+    { "source": "/", "destination": "/tradex-flow.html" },
+    { "source": "/estimate", "destination": "/tradex-estimate.html" }
   ]
 }
