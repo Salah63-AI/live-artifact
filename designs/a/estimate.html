@@ -1,0 +1,1447 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Tradex Cost Estimate</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Archivo:wdth,wght@62..125,300..700&display=swap" rel="stylesheet">
+<script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2.49.4/dist/umd/supabase.js"></script>
+<script src="../config.js"></script>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/xlsx/0.18.5/xlsx.full.min.js"></script>
+<style>
+:root {
+  --paper: #F3F7F6;
+  --ink: #16302F;
+  --ink-soft: #4B615F;
+  --line: #CFDCD9;
+  --pipe: #47BD9B;
+  --teal-text: #1F7A62;
+  --material: #3E64A8;
+  --sub: #A55B26;
+  --warn: #7A5C0A;
+  --bad: #B3261E;
+  --hl: #E3F3EE;
+  --field: #FFFFFF;
+  --card: #FFFFFF;
+  color-scheme: light;
+}
+@media (prefers-color-scheme: dark) {
+  :root:not([data-theme="light"]) {
+    --paper: #0F1B1A; --ink: #DDE8E5; --ink-soft: #9AAEAA; --line: #2A3B39;
+    --teal-text: #6FD3B3; --material: #8AA6E0; --sub: #D08A55;
+    --warn: #D9B451; --bad: #F2847B; --hl: #16302C; --field: #15231F; --card: #132220; color-scheme: dark;
+  }
+}
+:root[data-theme="dark"] {
+  --paper: #0F1B1A; --ink: #DDE8E5; --ink-soft: #9AAEAA; --line: #2A3B39;
+  --teal-text: #6FD3B3; --material: #8AA6E0; --sub: #D08A55;
+  --warn: #D9B451; --bad: #F2847B; --hl: #16302C; --field: #15231F; --card: #132220; color-scheme: dark;
+}
+
+* { box-sizing: border-box; }
+body {
+  margin: 0; background: var(--paper); color: var(--ink);
+  font-family: Calibri, "Archivo", system-ui, sans-serif; font-size: 1rem; line-height: 1.5;
+  -webkit-font-smoothing: antialiased;
+}
+.page { max-width: 72rem; margin: 0 auto; padding: 2.5rem 16px 4rem; }
+a { color: inherit; }
+:focus-visible { outline: 3px solid var(--pipe); outline-offset: 3px; border-radius: 4px; }
+[hidden] { display: none !important; }
+.visually-hidden { position: absolute; width: 1px; height: 1px; overflow: hidden; clip: rect(0 0 0 0); white-space: nowrap; }
+
+/* Header */
+.mast { display: flex; align-items: center; justify-content: space-between; flex-wrap: wrap; gap: 1rem; margin-bottom: 2.5rem; }
+.mast img { height: 44px; width: auto; mix-blend-mode: multiply; }
+.mast-right { display: flex; align-items: center; gap: 1rem; font-size: .875rem; color: var(--ink-soft); }
+@media (prefers-color-scheme: dark) {
+  :root:not([data-theme="light"]) .mast img { mix-blend-mode: normal; background: #fff; padding: 6px 10px; border-radius: 8px; }
+}
+h1 {
+  font-family: "Archivo", Calibri, system-ui, sans-serif;
+  font-stretch: 125%; font-weight: 300; font-size: clamp(2.1rem, 5.4vw, 3.6rem);
+  line-height: 1.05; letter-spacing: -0.01em; margin: 0 0 1rem; max-width: 18ch;
+}
+.lede { font-size: 1.125rem; color: var(--ink-soft); max-width: 44rem; margin: 0 0 2rem; }
+.formula { font-variant-numeric: tabular-nums; color: var(--ink); }
+
+/* Buttons and fields */
+.btn {
+  font: inherit; font-size: .875rem; line-height: 1.2; padding: .5rem .85rem; min-height: 2.25rem;
+  border-radius: 8px; border: 1px solid var(--line); background: transparent; color: var(--ink); cursor: pointer;
+}
+.btn:hover { border-color: var(--pipe); }
+.btn-primary { background: var(--pipe); border-color: var(--pipe); color: #000; font-weight: 600; }
+.btn-primary:hover { background: #3AA888; }
+.btn-danger { color: var(--bad); }
+.btn-link { border: 0; padding: .25rem .4rem; min-height: 0; color: var(--teal-text); text-decoration: underline; text-underline-offset: 3px; }
+.btn:disabled { opacity: .5; cursor: default; }
+.field { display: grid; gap: .3rem; font-size: .875rem; color: var(--ink-soft); }
+.field input, .field textarea, .field select, .cell-input, .toolbar input, .toolbar select {
+  font: inherit; font-size: .95rem; color: var(--ink); background: var(--field);
+  border: 1px solid var(--line); border-radius: 8px; padding: .5rem .65rem; width: 100%;
+}
+.field textarea { min-height: 4rem; resize: vertical; }
+.field input:focus, .field textarea:focus, .field select:focus, .cell-input:focus, .toolbar input:focus, .toolbar select:focus {
+  outline: 2px solid var(--pipe); outline-offset: 0; border-color: var(--pipe);
+}
+.cell-input { padding: .35rem .5rem; text-align: right; min-width: 6.5rem; font-variant-numeric: tabular-nums; }
+.form-grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(min(100%, 13rem), 1fr)); gap: .9rem 1.25rem; }
+.form-grid .wide { grid-column: 1 / -1; }
+.form-actions { display: flex; flex-wrap: wrap; gap: .5rem; margin-top: 1rem; align-items: center; }
+.msg { font-size: .9rem; margin: .5rem 0 0; }
+.msg.is-error { color: var(--bad); }
+.msg.is-ok { color: var(--teal-text); }
+
+/* Show / hide password */
+.pw-wrap { position: relative; display: block; }
+.pw-wrap input { padding-right: 2.9rem; }
+.pw-eye {
+  position: absolute; right: 4px; top: 50%; transform: translateY(-50%);
+  width: 2.25rem; height: 2.25rem; display: inline-flex; align-items: center; justify-content: center;
+  border: 0; border-radius: 6px; background: transparent; color: var(--ink-soft); cursor: pointer; padding: 0;
+}
+.pw-eye:hover { color: var(--ink); }
+.pw-eye svg { width: 20px; height: 20px; }
+
+/* Status bar */
+.status { position: fixed; left: 50%; bottom: 1.25rem; transform: translateX(-50%); z-index: 10;
+  background: var(--ink); color: var(--paper); padding: .6rem 1rem; border-radius: 8px; font-size: .9rem; max-width: calc(100% - 32px); }
+.status.is-error { background: var(--bad); color: #fff; }
+
+/* Sign-in */
+.auth { max-width: 26rem; }
+.auth h2 { font-weight: 400; font-size: 1.6rem; margin: 0 0 .5rem; }
+.auth p { color: var(--ink-soft); margin: 0 0 1.25rem; }
+.auth form { display: grid; gap: .9rem; }
+
+/* Tabs */
+.tabs { display: flex; gap: .25rem; border-bottom: 3px solid var(--pipe); margin: 0 0 2rem; }
+.tab {
+  font: inherit; font-size: 1rem; padding: .6rem 1.1rem; border: 1px solid var(--line); border-bottom: 0;
+  border-radius: 10px 10px 0 0; background: transparent; color: var(--ink-soft); cursor: pointer;
+}
+.tab[aria-selected="true"] { background: var(--pipe); border-color: var(--pipe); color: #000; font-weight: 600; }
+
+/* Sections */
+.subhead { display: flex; flex-wrap: wrap; align-items: baseline; gap: .5rem 1rem; margin: 2rem 0 .75rem; }
+.subhead:first-child { margin-top: 0; }
+.subhead h2, .subhead h3 { margin: 0; font-weight: 600; }
+.subhead h2 { font-size: 1.5rem; font-weight: 400; }
+.subhead h3 { font-size: 1.2rem; }
+.subhead .push { margin-left: auto; display: flex; flex-wrap: wrap; gap: .5rem; }
+.toolbar { display: flex; flex-wrap: wrap; gap: .5rem; align-items: center; margin: 0 0 .75rem; }
+.toolbar input[type="search"] { width: auto; flex: 1 1 14rem; }
+.toolbar select { width: auto; }
+.form-grid label.check { display: flex; gap: .5rem; align-items: center; font-size: .9rem; }
+.toolbar label.check { display: inline-flex; gap: .4rem; align-items: center; font-size: .9rem; color: var(--ink-soft); }
+.table-wrap { position: relative; overflow-x: auto;border: 1px solid var(--line); border-radius: 10px; background: var(--card); }
+table { border-collapse: collapse; width: 100%; font-size: .9rem; }
+th, td { text-align: left; padding: .55rem .75rem; border-bottom: 1px solid var(--line); vertical-align: middle; }
+th { font-weight: 600; color: var(--ink-soft); white-space: nowrap; }
+tbody tr:last-child td { border-bottom: 0; }
+td.num-cell, th.num-cell { text-align: right; font-variant-numeric: tabular-nums; white-space: nowrap; }
+tr.is-selected td { background: var(--hl); }
+tr.is-muted td { color: var(--ink-soft); }
+tfoot td { font-weight: 600; border-top: 1px solid var(--line); border-bottom: 0; }
+.empty { padding: 1rem .75rem; color: var(--ink-soft); }
+.panel { margin: 0 0 1rem; padding: 1.25rem; border: 1px solid var(--line); border-radius: 12px; background: var(--card); }
+.panel h3 { margin: 0 0 1rem; font-size: 1.1rem; font-weight: 600; }
+.kind { display: inline-block; font-size: .8rem; font-weight: 600; padding: .1rem .5rem; border-radius: 999px; border: 1.5px solid; white-space: nowrap; }
+.kind.material { color: var(--material); }
+.kind.subcontractor { color: var(--sub); }
+.tag { font-size: .8rem; font-weight: 600; }
+.tag.new { color: var(--teal-text); }
+.tag.update { color: var(--material); }
+.tag.reject { color: var(--bad); }
+.tag.same { color: var(--ink-soft); }
+.status-final { color: var(--teal-text); font-weight: 600; }
+
+.kind.group-installation { color: var(--material); }
+.kind.group-accessories { color: #6E5BA6; }
+.kind.group-fittings { color: var(--teal-text); }
+
+/* Estimate workspace */
+.editor { margin-top: 2.5rem; padding-top: 2rem; border-top: 3px solid var(--pipe); }
+.editor-head { display: flex; flex-wrap: wrap; align-items: flex-end; gap: .75rem 1.5rem; margin: 0 0 1.5rem; }
+.editor-head h2 { margin: 0; font-family: "Archivo", Calibri, system-ui, sans-serif; font-stretch: 112%; font-weight: 400; font-size: 1.9rem; line-height: 1.15; }
+.editor-head .meta { color: var(--ink-soft); font-size: .95rem; margin: .25rem 0 0; }
+.editor-head .push { margin-left: auto; display: flex; flex-wrap: wrap; gap: .5rem; }
+.stats { display: flex; flex-wrap: wrap; gap: .5rem 2rem; margin: 0 0 1.75rem; padding: 0; list-style: none; }
+.stats li { display: grid; }
+.stats span { font-size: .8rem; color: var(--ink-soft); }
+.stats b { font-size: 1.35rem; font-variant-numeric: tabular-nums; font-weight: 600; }
+.editor-grid { display: grid; grid-template-columns: minmax(0, 1fr) 22rem; gap: 1.75rem; align-items: start; }
+.step-sec { margin: 0 0 2rem; }
+.step-sec > h3 { display: flex; align-items: baseline; gap: .6rem; margin: 0 0 .9rem; font-size: 1.2rem; font-weight: 600; }
+.step-sec > h3 .n { display: inline-flex; align-items: center; justify-content: center; width: 1.8rem; height: 1.8rem; border-radius: 50%;
+  border: 3px solid var(--pipe); font-size: .85rem; font-weight: 700; flex: none; }
+.step-sec > h3 small { font-size: .85rem; font-weight: 400; color: var(--ink-soft); }
+.save-state { font-size: .85rem; color: var(--ink-soft); min-height: 1.25rem; margin: .5rem 0 0; }
+.save-state.is-error { color: var(--bad); }
+
+/* Zone choice */
+.zones { border: 0; padding: 0; margin: 0; display: grid; grid-template-columns: repeat(auto-fit, minmax(min(100%, 11rem), 1fr)); gap: .6rem; }
+.zones legend { font-size: .875rem; color: var(--ink-soft); padding: 0; margin-bottom: .3rem; }
+.zone { position: relative; display: grid; gap: .1rem; padding: .75rem .9rem; border: 1.5px solid var(--line); border-radius: 10px; background: var(--field); cursor: pointer; }
+.zone input { position: absolute; opacity: 0; pointer-events: none; }
+.zone b { font-size: 1rem; }
+.zone span { font-size: .85rem; color: var(--ink-soft); }
+.zone em { font-style: normal; font-weight: 700; font-variant-numeric: tabular-nums; color: var(--teal-text); }
+.zone:hover { border-color: var(--pipe); }
+.zone:has(input:checked) { border-color: var(--pipe); box-shadow: inset 0 0 0 1.5px var(--pipe); background: var(--hl); }
+.zone:has(input:focus-visible) { outline: 3px solid var(--pipe); outline-offset: 2px; }
+
+/* Line groups inside a unit card */
+tr.group-row td { background: var(--hl); font-weight: 600; font-size: .85rem; padding-top: .45rem; padding-bottom: .45rem; }
+tr.group-row td.num-cell { color: var(--ink); }
+.margin-low { color: var(--bad) !important; }
+.unit-card { border: 1px solid var(--line); border-radius: 12px; background: var(--card); margin-bottom: 1.25rem; overflow: hidden; }
+.unit-head { display: flex; flex-wrap: wrap; gap: .75rem 1rem; align-items: end; padding: 1rem 1.25rem; border-bottom: 1px solid var(--line); background: var(--hl); }
+.unit-head .field { flex: 1 1 14rem; }
+.unit-head .field.qty { flex: 0 1 9rem; }
+.unit-card table { font-size: .875rem; }
+.unit-card .table-wrap { border: 0; border-radius: 0; }
+.add-line { display: flex; flex-wrap: wrap; gap: .5rem; padding: .9rem 1.25rem; border-top: 1px solid var(--line); align-items: center; }
+.add-line select { flex: 1 1 16rem; width: auto; min-width: 0; max-width: 100%; }
+.add-line input { flex: 0 1 7rem; width: auto; }
+.unit-foot { display: grid; grid-template-columns: repeat(auto-fit, minmax(9rem, 1fr)); gap: .5rem 1rem; padding: .9rem 1.25rem; border-top: 1px solid var(--line); font-size: .875rem; }
+.unit-foot div { display: grid; }
+.unit-foot span { color: var(--ink-soft); }
+.unit-foot b { font-variant-numeric: tabular-nums; }
+.unit-foot .total b { color: var(--teal-text); font-size: 1.05rem; }
+
+.summary { position: sticky; top: 1rem; border: 2px solid var(--pipe); border-radius: 12px; background: var(--card); padding: 1.25rem; }
+.summary h3 { margin: 0 0 .25rem; font-size: 1.15rem; }
+.summary .sub { margin: 0 0 1rem; color: var(--ink-soft); font-size: .875rem; }
+.build { display: grid; gap: 0; margin: 0; font-variant-numeric: tabular-nums; }
+.build div { display: flex; justify-content: space-between; gap: 1rem; padding: .4rem 0; border-bottom: 1px solid var(--line); font-size: .925rem; }
+.build dt { color: var(--ink-soft); }
+.build dd { margin: 0; text-align: right; }
+.build .strong dt, .build .strong dd { color: var(--ink); font-weight: 700; }
+.build .price { border-bottom: 0; margin-top: .5rem; padding: .7rem .75rem; background: var(--pipe); border-radius: 8px; }
+.build .price dt, .build .price dd { color: #000; font-weight: 700; font-size: 1.05rem; }
+.build .gap { margin-top: .9rem; }
+.build .indent dt { padding-left: .9rem; }
+.margin-box { display: grid; grid-template-columns: 1fr 1fr; gap: .5rem; margin-top: .9rem; }
+.margin-box div { display: grid; padding: .6rem .75rem; border: 1px solid var(--line); border-radius: 8px; }
+.margin-box span { font-size: .8rem; color: var(--ink-soft); }
+.margin-box b { font-size: 1.15rem; font-variant-numeric: tabular-nums; }
+.summary .note { margin: .75rem 0 0; font-size: .8rem; color: var(--ink-soft); }
+.summary .actions { display: grid; gap: .5rem; margin-top: 1.25rem; }
+
+footer.built { margin-top: 4rem; padding-top: 1.25rem; border-top: 1px solid var(--line); font-size: .85rem; color: var(--ink-soft); display: flex; flex-wrap: wrap; justify-content: space-between; gap: .5rem; }
+
+@media (max-width: 900px) {
+  .editor-grid { grid-template-columns: minmax(0, 1fr); }
+  .summary { position: static; }
+}
+</style>
+<link href="https://fonts.googleapis.com/css2?family=Barlow:wght@400;500;600;700&family=Barlow+Condensed:wght@500;600&display=swap" rel="stylesheet">
+<link rel="stylesheet" href="guided.css">
+</head>
+<body>
+<header class="topbar">
+  <div class="topbar-in">
+    <img src="../tradex-logo.png" alt="Tradex">
+    <nav class="topnav" aria-label="Pages">
+      <a href="flow.html">Project flow</a>
+      <a href="estimate.html" aria-current="page">Estimates</a>
+      <a href="quote.html">Public quote</a>
+    </nav>
+    <div class="who"><span id="who"></span><button class="btn" id="sign-out" type="button" hidden>Sign out</button></div>
+  </div>
+</header>
+<main class="page">
+  <h1>Project estimates</h1>
+  <p class="lede" id="intro">Price a project in four short steps: the project, its indoor units, the rates, then review the price.</p>
+
+  <section class="auth" id="auth" hidden>
+    <h2 id="auth-title">Sign in</h2>
+    <p>Estimates and prices are private to Tradex editors. Use the same account as the project flow page.</p>
+    <form id="auth-form">
+      <label class="field">Email<input type="email" name="email" autocomplete="email" required></label>
+      <label class="field" id="pw-field">Password<input type="password" name="password" autocomplete="current-password" minlength="8" required></label>
+      <div class="form-actions">
+        <button class="btn btn-primary" type="submit" id="auth-submit">Sign in</button>
+        <button class="btn btn-link" type="button" id="auth-toggle">Create an account</button>
+        <button class="btn btn-link" type="button" id="auth-forgot">Forgot password?</button>
+      </div>
+      <p class="msg" id="auth-msg" role="status"></p>
+    </form>
+  </section>
+
+  <section class="auth" id="recover" hidden>
+    <h2>Set a new password</h2>
+    <p>You opened a password reset link. Choose a new password for <b id="recover-email"></b>.</p>
+    <form id="recover-form">
+      <label class="field">New password<input type="password" name="password" autocomplete="new-password" minlength="8" required></label>
+      <label class="field">Repeat new password<input type="password" name="confirm" autocomplete="new-password" minlength="8" required></label>
+      <div class="form-actions"><button class="btn btn-primary" type="submit" id="recover-submit">Save new password</button></div>
+      <p class="msg" id="recover-msg" role="status"></p>
+    </form>
+  </section>
+
+  <p class="msg" id="gate-msg" role="status" hidden></p>
+
+  <div id="app" hidden>
+    <div class="tabs" role="tablist">
+      <button class="tab" role="tab" id="tab-estimates" aria-controls="view-estimates" aria-selected="true" type="button">Estimates</button>
+      <button class="tab" role="tab" id="tab-items" aria-controls="view-items" aria-selected="false" type="button">Price list</button>
+      <button class="tab" role="tab" id="tab-requests" aria-controls="view-requests" aria-selected="false" type="button">Quote requests</button>
+    </div>
+
+    <!-- Estimates -->
+    <section id="view-estimates" role="tabpanel" aria-labelledby="tab-estimates">
+      <div class="subhead"><h2>Estimates</h2><div class="push"><button class="btn btn-primary" type="button" id="new-estimate">New estimate</button></div></div>
+      <div id="new-estimate-slot"></div>
+      <div class="toolbar">
+        <label class="visually-hidden" for="est-search">Search estimates</label>
+        <input type="search" id="est-search" placeholder="Search project, customer or sales person">
+        <label class="visually-hidden" for="est-status">Status</label>
+        <select id="est-status"><option value="">All statuses</option><option value="draft">Draft</option><option value="final">Final</option></select>
+      </div>
+      <div class="table-wrap"><table>
+        <thead><tr>
+          <th>Project</th><th>Customer</th><th>Sales person</th><th>Zone</th><th class="num-cell">Indoor units</th>
+          <th class="num-cell">Total cost</th><th class="num-cell">Net price</th><th class="num-cell">Margin</th><th>Status</th><th><span class="visually-hidden">Actions</span></th>
+        </tr></thead>
+        <tbody id="estimates-body"></tbody>
+      </table></div>
+
+      <section class="editor" id="editor" hidden>
+        <p><button class="btn btn-link" type="button" id="back-to-list">All estimates</button></p>
+        <div class="editor-head">
+          <div>
+            <h2 id="editor-title">Estimate</h2>
+            <p class="meta" id="editor-meta"></p>
+          </div>
+        </div>
+        <ul class="stats" id="stats" hidden></ul>
+
+        <div class="readout" id="readout" aria-live="polite"></div>
+        <ol class="stepper" id="stepper" aria-label="Estimate steps">
+          <li><button type="button" data-go="1"><span>Step 1</span><b>Project</b></button></li>
+          <li><button type="button" data-go="2"><span>Step 2</span><b>Indoor units</b></button></li>
+          <li><button type="button" data-go="3"><span>Step 3</span><b>Rates</b></button></li>
+          <li><button type="button" data-go="4"><span>Step 4</span><b>Review</b></button></li>
+        </ol>
+
+        <div class="editor-grid">
+          <div>
+            <section class="step-sec" aria-labelledby="sec-details" data-step="1">
+              <h3 id="sec-details"><span class="n">1</span>Project details</h3>
+              <form class="panel" id="details-form">
+                <div class="form-grid">
+                  <label class="field">Project name<input name="name" required data-key="f-name"></label>
+                  <label class="field">Customer<input name="customer" data-key="f-customer"></label>
+                  <label class="field">Sales person<input name="sales_person" data-key="f-sales"></label>
+                  <label class="field">Project location<input name="location" placeholder="City, district or site address" data-key="f-location"></label>
+                  <fieldset class="zones wide" id="zones"><legend>Location zone (multiplies material and subcontractor cost)</legend></fieldset>
+                  <label class="field">Tracked project (optional)<select name="project_id" data-key="f-project"></select></label>
+                  <label class="field">Status<select name="status" data-key="f-status"><option value="draft">Draft</option><option value="final">Final</option></select></label>
+                  <label class="field wide">Notes<textarea name="notes" data-key="f-notes"></textarea></label>
+                </div>
+                <p class="save-state" id="details-state" role="status"></p>
+              </form>
+            </section>
+
+            <section class="step-sec" aria-labelledby="sec-units" data-step="2">
+              <h3 id="sec-units"><span class="n">2</span>Indoor units <small>For each unit type, add the materials and work for one unit at central prices, then set how many units the project needs.</small></h3>
+              <div id="units"></div>
+              <button class="btn" type="button" id="add-unit">Add indoor unit type</button>
+            </section>
+
+            <section class="step-sec" aria-labelledby="sec-rates" data-step="3">
+              <h3 id="sec-rates"><span class="n">3</span>Rates and pricing <small>Standard rates are filled in. Change them only for this project.</small></h3>
+              <form class="panel" id="rates-form">
+                <div class="form-grid">
+                  <label class="field">Overhead % of direct cost<input name="overhead_pct" type="number" min="0" step="0.01" required data-key="f-oh"></label>
+                  <label class="field">Indirect % of direct cost<input name="indirect_pct" type="number" min="0" step="0.01" required data-key="f-ind"></label>
+                  <label class="field">Marketing expense (EGP)<input name="marketing_amount" type="number" min="0" step="0.01" required data-key="f-mkt"></label>
+                  <label class="field">Target margin % (sales price = cost &divide; (1 &minus; margin))<input name="margin_pct" type="number" min="0" max="99.99" step="0.01" required data-key="f-margin"></label>
+                  <label class="field">Discount % of sales price<input name="discount_pct" type="number" min="0" max="99.99" step="0.01" required data-key="f-disc"></label>
+                  <label class="field">VAT %<input name="vat_pct" type="number" min="0" step="0.01" required data-key="f-vat"></label>
+                </div>
+                <p class="save-state" id="rates-state" role="status"></p>
+              </form>
+            </section>
+
+            <section class="step-sec" aria-labelledby="sec-review" data-step="4">
+              <h3 id="sec-review">Review the price <small>Check the build-up, then export it or mark the estimate final in step 1.</small></h3>
+              <aside class="summary" id="summary" aria-live="polite"></aside>
+              <div class="form-actions">
+                <button class="btn" type="button" id="export-xlsx">Export to Excel</button>
+                <button class="btn" type="button" id="refresh-prices">Refresh prices from price list</button>
+                <button class="btn btn-danger" type="button" id="delete-estimate">Delete estimate</button>
+              </div>
+            </section>
+
+            <div class="wizard-nav">
+              <button class="btn btn-lg" type="button" id="step-back">Back</button>
+              <button class="btn btn-primary btn-lg next" type="button" id="step-next">Next</button>
+            </div>
+          </div>
+        </div>
+      </section>
+    </section>
+
+    <!-- Price list -->
+    <section id="view-items" role="tabpanel" aria-labelledby="tab-items" hidden>
+      <div class="subhead"><h2>Price list</h2>
+        <div class="push">
+          <button class="btn" type="button" id="download-template">Download import template</button>
+          <label class="btn" for="import-file">Import Excel or CSV</label>
+          <input class="visually-hidden" type="file" id="import-file" accept=".xlsx,.xls,.csv">
+          <button class="btn btn-primary" type="button" id="add-item">Add item</button>
+        </div>
+      </div>
+      <div id="item-form-slot"></div>
+      <div id="import-slot"></div>
+      <div class="toolbar">
+        <label class="visually-hidden" for="item-search">Search items</label>
+        <input type="search" id="item-search" placeholder="Search code or name">
+        <label class="visually-hidden" for="item-kind">Kind</label>
+        <select id="item-kind"><option value="">All groups</option><option value="installation">Installation materials</option><option value="accessories">Accessories</option><option value="fittings">Fittings</option><option value="subcontractor">Subcontractor</option></select>
+        <label class="check"><input type="checkbox" id="item-inactive"> Show inactive</label>
+      </div>
+      <div class="table-wrap"><table>
+        <thead><tr><th>Code</th><th>Item</th><th>Group</th><th>Unit</th><th class="num-cell">Price</th><th>Status</th><th><span class="visually-hidden">Actions</span></th></tr></thead>
+        <tbody id="items-body"></tbody>
+      </table></div>
+    </section>
+
+    <!-- Public quote requests -->
+    <section id="view-requests" role="tabpanel" aria-labelledby="tab-requests" hidden>
+      <div class="subhead"><h2>Quote requests</h2>
+        <div class="push"><a class="btn" id="public-link" href="quote.html" target="_blank" rel="noopener">Open the public quote page</a></div>
+      </div>
+      <p class="msg">Anyone with the public link can price a project and send it here. They see only the final price; they can't see or change your prices, rates or margin.</p>
+
+      <form class="panel" id="qs-form">
+        <h3>Rates used on the public page</h3>
+        <div class="form-grid">
+          <label class="field">Overhead % of direct cost<input name="overhead_pct" type="number" min="0" step="0.01" required></label>
+          <label class="field">Indirect % of direct cost<input name="indirect_pct" type="number" min="0" step="0.01" required></label>
+          <label class="field">Marketing expense per quote (EGP)<input name="marketing_amount" type="number" min="0" step="0.01" required></label>
+          <label class="field">Target margin %<input name="margin_pct" type="number" min="0" max="99.99" step="0.01" required></label>
+          <label class="field">Largest discount a visitor can give %<input name="max_discount_pct" type="number" min="0" max="99.99" step="0.01" required></label>
+          <label class="field">VAT %<input name="vat_pct" type="number" min="0" step="0.01" required></label>
+          <label class="check wide"><input type="checkbox" name="public_enabled"> Public quote page is switched on</label>
+        </div>
+        <p class="save-state" id="qs-state" role="status"></p>
+      </form>
+
+      <div class="toolbar">
+        <label class="visually-hidden" for="req-status">Status</label>
+        <select id="req-status"><option value="">All requests</option><option value="new" selected>New</option><option value="converted">Made into an estimate</option><option value="closed">Closed</option></select>
+      </div>
+      <div class="table-wrap"><table>
+        <thead><tr><th>Received</th><th>Reference</th><th>Project</th><th>Customer</th><th>Contact</th><th>Zone</th><th class="num-cell">Indoor units</th><th class="num-cell">Price with VAT</th><th>Status</th><th><span class="visually-hidden">Actions</span></th></tr></thead>
+        <tbody id="requests-body"></tbody>
+      </table></div>
+      <div id="request-detail"></div>
+    </section>
+  </div>
+
+  <footer class="built"><span>Built by Salah Agent for Tradex finance.</span><span>Every change is saved to the database and logged with who made it and when.</span></footer>
+</main>
+<div class="status" id="status" role="status" aria-live="polite" hidden></div>
+
+<script>
+const SUPABASE_URL = window.TRADEX_DB.url;
+// Publishable key: safe in the page, every table is guarded by row-level security for signed-in editors.
+const SUPABASE_KEY = window.TRADEX_DB.key;
+const db = supabase.createClient(SUPABASE_URL, SUPABASE_KEY);
+
+const KINDS = { material: "Material", subcontractor: "Subcontractor" };
+// cost groups in build-up order; material items carry material_group, subcontractor items don't
+const GROUPS = { installation: "Installation materials", accessories: "Accessories", fittings: "Fittings", subcontractor: "Subcontractor" };
+const MATERIAL_GROUPS = ["installation", "accessories", "fittings"];
+const groupOf = item => item.kind === "subcontractor" ? "subcontractor" : item.material_group || "installation";
+const state = { user: null, items: [], projects: [], zones: [], estimates: [], estId: null, est: null, units: [], unitSums: [], editingItem: undefined, importRows: null };
+
+const $ = id => document.getElementById(id);
+const el = (tag, cls, text) => { const n = document.createElement(tag); if (cls) n.className = cls; if (text != null) n.textContent = text; return n; };
+const num = v => v == null || v === "" ? 0 : Number(v);
+const fmtAmount = v => num(v).toLocaleString("en-US", { minimumFractionDigits: 2, maximumFractionDigits: 2 });
+const fmtMoney = v => fmtAmount(v) + " EGP";
+const fmtQty = v => num(v).toLocaleString("en-US", { maximumFractionDigits: 3 });
+const fmtPct = v => num(v).toLocaleString("en-US", { maximumFractionDigits: 2 }) + "%";
+const itemById = id => state.items.find(i => i.id === id);
+
+/* ---------- status messages ---------- */
+let statusTimer;
+function say(text, isError) {
+  const s = $("status");
+  s.textContent = text; s.classList.toggle("is-error", !!isError); s.hidden = false;
+  clearTimeout(statusTimer);
+  statusTimer = setTimeout(() => { s.hidden = true; }, isError ? 8000 : 2500);
+}
+const OFFLINE = "Can't reach the Tradex database. Check your internet connection and try again. If it keeps failing, the Supabase project may be paused (the free plan pauses it when idle) and needs to be restored.";
+function isNetworkError(error) {
+  return !!error && (error.name === "AuthRetryableFetchError" || /failed to fetch|networkerror|load failed|fetch failed/i.test(error.message || ""));
+}
+function authError(error) { return isNetworkError(error) ? OFFLINE : error.message; }
+function explain(error) {
+  if (!error) return "";
+  if (isNetworkError(error)) return OFFLINE;
+  if (error.code === "PGRST301" || /JWT/i.test(error.message)) return "Your session ended. Sign in again.";
+  if (error.code === "42501") return "This account isn't allowed to change that.";
+  if (error.code === "23505") return "That code is already in the price list.";
+  if (error.code === "23503") return "It's used in an estimate, so it can't be deleted. Mark it inactive instead.";
+  if (error.code === "23514") return "One of the values is out of range. Amounts can't be negative, margin and discount must be under 100%, and material items need a group.";
+  return error.message;
+}
+async function run(promise, okText) {
+  const { data, error } = await promise;
+  if (error) { say(explain(error), true); return null; }
+  if (okText) say(okText);
+  return data ?? true;
+}
+
+/* ---------- show / hide password ---------- */
+const EYE = '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M2 12s3.5-7 10-7 10 7 10 7-3.5 7-10 7S2 12 2 12z"/><circle cx="12" cy="12" r="3"/></svg>';
+const EYE_OFF = '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M9.9 4.24A9.1 9.1 0 0 1 12 4c6.5 0 10 7 10 7a17.6 17.6 0 0 1-2.16 3.19M6.6 6.6A17.4 17.4 0 0 0 2 12s3.5 7 10 7a9.7 9.7 0 0 0 5.4-1.6"/><path d="M9.9 9.9a3 3 0 0 0 4.2 4.2"/><path d="M2 2l20 20"/></svg>';
+function setPasswordVisible(input, btn, visible) {
+  input.type = visible ? "text" : "password";
+  btn.innerHTML = visible ? EYE_OFF : EYE;
+  btn.setAttribute("aria-label", visible ? "Hide password" : "Show password");
+  btn.setAttribute("aria-pressed", String(visible));
+  btn.title = visible ? "Hide password" : "Show password";
+}
+for (const input of document.querySelectorAll('input[type="password"]')) {
+  const wrap = el("span", "pw-wrap");
+  input.replaceWith(wrap); wrap.append(input);
+  const btn = el("button", "pw-eye"); btn.type = "button";
+  setPasswordVisible(input, btn, false);
+  btn.addEventListener("click", () => { setPasswordVisible(input, btn, input.type === "password"); input.focus(); });
+  wrap.append(btn);
+  // never leave a password showing once the form is sent or reset
+  input.form.addEventListener("submit", () => setPasswordVisible(input, btn, false));
+  input.form.addEventListener("reset", () => setPasswordVisible(input, btn, false));
+}
+
+/* ---------- auth ---------- */
+let authMode = "signin"; // signin | signup | reset
+function setAuthMode(mode) {
+  authMode = mode;
+  const f = $("auth-form");
+  $("auth-title").textContent = { signin: "Sign in", signup: "Create an account", reset: "Reset your password" }[mode];
+  $("auth-submit").textContent = { signin: "Sign in", signup: "Create account", reset: "Send reset link" }[mode];
+  $("auth-toggle").textContent = mode === "signin" ? "Create an account" : "Back to sign in";
+  $("auth-forgot").hidden = mode !== "signin";
+  $("pw-field").hidden = mode === "reset";
+  f.password.required = mode !== "reset";
+  f.password.autocomplete = mode === "signup" ? "new-password" : "current-password";
+  $("auth-msg").textContent = "";
+}
+$("auth-toggle").addEventListener("click", () => setAuthMode(authMode === "signin" ? "signup" : "signin"));
+$("auth-forgot").addEventListener("click", () => setAuthMode("reset"));
+$("auth-form").addEventListener("submit", async e => {
+  e.preventDefault();
+  const f = e.target, msg = $("auth-msg");
+  const creds = { email: f.email.value.trim(), password: f.password.value };
+  $("auth-submit").disabled = true; msg.className = "msg";
+  msg.textContent = { signin: "Signing in…", signup: "Creating account…", reset: "Sending reset link…" }[authMode];
+  if (authMode === "reset") {
+    // the link comes back to this page; a file:// page can't be a redirect target, so Supabase falls back to its Site URL
+    const opts = /^https?:$/.test(location.protocol) ? { redirectTo: location.origin + location.pathname } : {};
+    const { error } = await db.auth.resetPasswordForEmail(creds.email, opts);
+    $("auth-submit").disabled = false;
+    if (error) { msg.className = "msg is-error"; msg.textContent = authError(error); return; }
+    setAuthMode("signin");
+    msg.className = "msg is-ok";
+    msg.textContent = "If " + creds.email + " has an account, a reset link is on its way. Open it in this browser to choose a new password.";
+    return;
+  }
+  const { data, error } = authMode === "signup" ? await db.auth.signUp(creds) : await db.auth.signInWithPassword(creds);
+  $("auth-submit").disabled = false;
+  if (error) {
+    msg.className = "msg is-error";
+    msg.textContent = error.code === "invalid_credentials" ? "Wrong email or password. Use Forgot password? to set a new one." : authError(error);
+    return;
+  }
+  if (authMode === "signup" && !data.session) {
+    setAuthMode("signin");
+    msg.className = "msg is-ok";
+    msg.textContent = "Account created. Open the confirmation email, then come back and sign in.";
+  }
+  f.password.value = "";
+});
+$("sign-out").addEventListener("click", () => db.auth.signOut());
+
+$("recover-form").addEventListener("submit", async e => {
+  e.preventDefault();
+  const f = e.target, msg = $("recover-msg");
+  if (f.password.value !== f.confirm.value) { msg.className = "msg is-error"; msg.textContent = "The two passwords don't match."; return; }
+  $("recover-submit").disabled = true; msg.className = "msg"; msg.textContent = "Saving…";
+  const { error } = await db.auth.updateUser({ password: f.password.value });
+  $("recover-submit").disabled = false;
+  if (error) { msg.className = "msg is-error"; msg.textContent = authError(error); return; }
+  f.reset(); msg.textContent = "";
+  state.recovering = false;
+  say("Password changed. You're signed in.");
+  const { data } = await db.auth.getSession();
+  onSession(data.session);
+});
+
+// a reset link that failed (expired or already used) comes back with the reason in the URL hash
+{
+  const hash = new URLSearchParams(location.hash.slice(1));
+  if (hash.get("error_description")) {
+    $("auth-msg").className = "msg is-error";
+    $("auth-msg").textContent = "That reset link didn't work (" + hash.get("error_description") + "). Use Forgot password? to get a new one.";
+    history.replaceState(null, "", location.pathname + location.search);
+  }
+}
+
+db.auth.onAuthStateChange((event, session) => {
+  if (event === "PASSWORD_RECOVERY") state.recovering = true;
+  // defer: supabase-js warns against awaiting other calls inside this callback
+  setTimeout(() => onSession(session), 0);
+});
+
+async function onSession(session) {
+  const user = session ? session.user : null;
+  if (user && state.user && user.id === state.user.id && !$("app").hidden) return;
+  state.user = user;
+  $("who").textContent = user ? user.email : "";
+  $("sign-out").hidden = !user;
+  $("gate-msg").hidden = true;
+  $("recover").hidden = !(user && state.recovering);
+  if (user && state.recovering) {
+    $("auth").hidden = true; $("app").hidden = true;
+    $("recover-email").textContent = user.email;
+    return;
+  }
+  if (!user) { $("app").hidden = true; $("auth").hidden = false; return; }
+  $("auth").hidden = true;
+  const { data, error } = await db.from("editors").select("email").maybeSingle();
+  if (error || !data) {
+    $("app").hidden = true;
+    $("gate-msg").hidden = false;
+    $("gate-msg").className = "msg is-error";
+    $("gate-msg").textContent = error ? "Couldn't check your access: " + explain(error) : "This account isn't an editor yet. Ask for " + user.email + " to be added.";
+    return;
+  }
+  $("app").hidden = false;
+  await Promise.all([loadItems(), loadProjects(), loadZones(), loadEstimates()]);
+}
+
+async function loadZones() {
+  const data = await run(db.from("location_zones").select("*").order("position"));
+  if (data) state.zones = data;
+}
+const zoneByCode = code => state.zones.find(z => z.code === code) || { code, name: code, description: "", factor_pct: 100 };
+
+/* ---------- tabs ---------- */
+function showTab(name) {
+  if (name === "requests") loadRequests();
+  for (const t of ["estimates", "items", "requests"]) {
+    $("tab-" + t).setAttribute("aria-selected", String(t === name));
+    $("view-" + t).hidden = t !== name;
+  }
+}
+$("tab-estimates").addEventListener("click", () => showTab("estimates"));
+$("tab-items").addEventListener("click", () => showTab("items"));
+$("tab-requests").addEventListener("click", () => showTab("requests"));
+
+/* ---------- public quote requests and their rates ---------- */
+const REQ_STATUS = { new: "New", converted: "Made into an estimate", closed: "Closed" };
+const QS_FIELDS = ["overhead_pct", "indirect_pct", "marketing_amount", "margin_pct", "max_discount_pct", "vat_pct"];
+state.requests = []; state.qs = null; state.reqId = null;
+
+async function loadRequests() {
+  const [s, r] = await Promise.all([
+    db.from("quote_settings").select("*").maybeSingle(),
+    db.from("quote_requests").select("*").order("created_at", { ascending: false }).limit(500),
+  ]);
+  if (s.error || r.error) { say(explain(s.error || r.error), true); return; }
+  state.qs = s.data; state.requests = r.data;
+  fillQuoteSettings(); renderRequests();
+  if (state.reqId) showRequest(state.requests.find(x => x.id === state.reqId));
+}
+
+function fillQuoteSettings() {
+  const f = $("qs-form").elements, s = state.qs; if (!s) return;
+  for (const k of QS_FIELDS) if (document.activeElement !== f[k]) f[k].value = num(s[k]);
+  f.public_enabled.checked = s.public_enabled;
+}
+$("qs-form").addEventListener("submit", ev => ev.preventDefault());
+$("qs-form").addEventListener("change", async ev => {
+  const t = ev.target; if (!t.name) return;
+  const st = $("qs-state");
+  if (t.type !== "checkbox" && (t.value === "" || !t.checkValidity())) {
+    st.className = "save-state is-error"; st.textContent = "Not saved: " + (t.validationMessage || "enter a number"); return;
+  }
+  st.className = "save-state"; st.textContent = "Saving…";
+  const { error } = await db.from("quote_settings").update({ [t.name]: t.type === "checkbox" ? t.checked : Number(t.value) }).eq("id", true);
+  if (error) { st.className = "save-state is-error"; st.textContent = "Couldn't save: " + explain(error); return; }
+  st.textContent = "Saved at " + new Date().toLocaleTimeString("en-GB", { hour: "2-digit", minute: "2-digit" }) + ". New public quotes use these rates.";
+  const s = await db.from("quote_settings").select("*").maybeSingle(); if (s.data) { state.qs = s.data; fillQuoteSettings(); }
+});
+
+function renderRequests() {
+  const body = $("requests-body"); body.replaceChildren();
+  const st = $("req-status").value;
+  const rows = state.requests.filter(r => !st || r.status === st);
+  if (!rows.length) {
+    const td = el("td", "empty", state.requests.length ? "No requests with this status." : "No requests yet. Share the public quote page link to receive them."); td.colSpan = 10;
+    body.append(el("tr")); body.lastChild.append(td); return;
+  }
+  for (const r of rows) {
+    const tr = el("tr", r.id === state.reqId ? "is-selected" : "");
+    const when = new Date(r.created_at).toLocaleString("en-GB", { day: "numeric", month: "short", year: "numeric", hour: "2-digit", minute: "2-digit" });
+    const open = el("button", "btn btn-link", "View"); open.type = "button"; open.setAttribute("aria-label", "View request " + r.reference);
+    open.addEventListener("click", () => { state.reqId = r.id; renderRequests(); showRequest(r); });
+    const act = el("td"); act.append(open);
+    tr.append(el("td", "", when), el("td", "", r.reference), el("td", "", r.project_name), el("td", "", r.customer),
+      el("td", "", [r.contact_phone, r.contact_email].filter(Boolean).join(", ")), el("td", "", zoneByCode(r.zone).name),
+      el("td", "num-cell", fmtQty(r.quoted.units)), el("td", "num-cell", fmtMoney(r.quoted.sales_with_vat)),
+      el("td", r.status === "new" ? "status-final" : "", REQ_STATUS[r.status]), act);
+    body.append(tr);
+  }
+}
+$("req-status").addEventListener("change", renderRequests);
+
+function showRequest(r) {
+  const slot = $("request-detail"); slot.replaceChildren();
+  if (!r) return;
+  const panel = el("div", "panel");
+  panel.style.marginTop = "1rem";
+  panel.append(el("h3", "", "Request " + r.reference + ": " + r.project_name));
+  const facts = el("dl", "build");
+  const fact = (label, v) => { if (!v && v !== 0) return; const d = el("div"); d.append(el("dt", "", label), el("dd", "", v)); facts.append(d); };
+  fact("Customer", r.customer); fact("Phone", r.contact_phone); fact("Email", r.contact_email); fact("Sales person", r.sales_person);
+  fact("Location", r.location); fact("Zone", zoneByCode(r.zone).name); fact("Discount asked", fmtPct(r.discount_pct));
+  fact("Price before VAT", fmtMoney(r.quoted.net_sales)); fact("Price with VAT", fmtMoney(r.quoted.sales_with_vat));
+  panel.append(facts);
+  for (const u of r.payload.units || []) {
+    panel.append(el("p", "msg", u.name + ", " + fmtQty(u.quantity) + " units"));
+    const wrap = el("div", "table-wrap"); const t = el("table");
+    t.innerHTML = '<thead><tr><th>Item</th><th>Group</th><th class="num-cell">Qty per indoor unit</th></tr></thead>';
+    const body = el("tbody");
+    for (const l of u.lines || []) {
+      const i = itemById(l.item_id);
+      const g = el("td"); if (i) g.append(groupTag(i));
+      const tr = el("tr"); tr.append(el("td", "", i ? i.code + " " + i.name : "Item no longer in the price list"), g, el("td", "num-cell", fmtQty(l.qty)));
+      body.append(tr);
+    }
+    t.append(body); wrap.append(t); panel.append(wrap);
+  }
+  const actions = el("div", "form-actions");
+  if (r.estimate_id) {
+    const go = el("button", "btn btn-primary", "Open its estimate"); go.type = "button";
+    go.addEventListener("click", async () => { showTab("estimates"); await loadEstimates(); openEstimate(r.estimate_id); });
+    actions.append(go);
+  } else {
+    const make = el("button", "btn btn-primary", "Make an estimate from this request"); make.type = "button";
+    make.addEventListener("click", () => requestToEstimate(r, make));
+    actions.append(make);
+  }
+  const statusSel = el("select"); statusSel.setAttribute("aria-label", "Request status");
+  for (const [v, t] of Object.entries(REQ_STATUS)) statusSel.append(new Option(t, v));
+  statusSel.value = r.status;
+  statusSel.addEventListener("change", async () => { if (await run(db.from("quote_requests").update({ status: statusSel.value }).eq("id", r.id), "Status saved.")) loadRequests(); });
+  const del = el("button", "btn btn-danger", "Delete request"); del.type = "button";
+  del.addEventListener("click", async () => {
+    if (!confirm("Delete request " + r.reference + "? The change log keeps a copy.")) return;
+    if (await run(db.from("quote_requests").delete().eq("id", r.id), "Request deleted.")) { state.reqId = null; slot.replaceChildren(); loadRequests(); }
+  });
+  actions.append(statusSel, del);
+  panel.append(actions);
+  slot.append(panel);
+}
+
+// copies the request into a normal estimate at today's price list and the public rates, so the owner can review and adjust it
+async function requestToEstimate(r, btn) {
+  const s = state.qs || {};
+  btn.disabled = true;
+  const est = await run(db.from("estimates").insert({
+    name: r.project_name, customer: r.customer, sales_person: r.sales_person, location: r.location, zone: r.zone,
+    discount_pct: r.discount_pct, overhead_pct: s.overhead_pct ?? 15, indirect_pct: s.indirect_pct ?? 25, margin_pct: s.margin_pct ?? 20,
+    marketing_amount: s.marketing_amount ?? 0, vat_pct: s.vat_pct ?? 14,
+    notes: ["From public quote request " + r.reference, r.contact_phone && "Phone " + r.contact_phone, r.contact_email && "Email " + r.contact_email].filter(Boolean).join(". "),
+  }).select().single());
+  if (!est) { btn.disabled = false; return; }
+  let pos = 0;
+  for (const u of r.payload.units || []) {
+    const unit = await run(db.from("estimate_units").insert({ estimate_id: est.id, name: u.name || "Indoor unit", quantity: num(u.quantity), position: ++pos }).select().single());
+    if (!unit) break;
+    const lines = (u.lines || []).filter(l => itemById(l.item_id)).map((l, k) => ({ unit_id: unit.id, item_id: l.item_id, qty_per_unit: num(l.qty), unit_price: itemById(l.item_id).unit_price, position: k + 1 }));
+    if (lines.length && !(await run(db.from("estimate_lines").insert(lines)))) break;
+  }
+  await run(db.from("quote_requests").update({ status: "converted", estimate_id: est.id }).eq("id", r.id), "Estimate created from " + r.reference + ".");
+  showTab("estimates"); await loadEstimates(); openEstimate(est.id);
+}
+
+/* ---------- price list ---------- */
+async function loadItems() {
+  const data = await run(db.from("cost_items").select("*").order("kind").order("code"));
+  if (!data) return;
+  state.items = data;
+  renderItems();
+  if (state.est) renderEditor();
+}
+
+function renderItems() {
+  const q = $("item-search").value.trim().toLowerCase();
+  const group = $("item-kind").value, showInactive = $("item-inactive").checked;
+  const rows = state.items.filter(i => (showInactive || i.active) && (!group || groupOf(i) === group)
+    && (!q || i.code.toLowerCase().includes(q) || i.name.toLowerCase().includes(q)));
+  const body = $("items-body"); body.replaceChildren();
+  if (!rows.length) {
+    const td = el("td", "empty", state.items.length ? "No items match." : "The price list is empty. Add items or import an Excel file.");
+    td.colSpan = 7; body.append(el("tr")); body.lastChild.append(td); return;
+  }
+  for (const i of rows) {
+    const tr = el("tr", i.active ? "" : "is-muted");
+    const kindCell = el("td"); kindCell.append(groupTag(i));
+    tr.append(el("td", "", i.code), el("td", "", i.name), kindCell, el("td", "", i.uom),
+      el("td", "num-cell", fmtMoney(i.unit_price)), el("td", "", i.active ? "Active" : "Inactive"));
+    const act = el("td"); const edit = el("button", "btn btn-link", "Edit"); edit.type = "button";
+    edit.addEventListener("click", () => showItemForm(i));
+    act.append(edit); tr.append(act); body.append(tr);
+  }
+}
+function groupTag(item) {
+  const g = groupOf(item);
+  return el("span", "kind " + (g === "subcontractor" ? "subcontractor" : "group-" + g), GROUPS[g]);
+}
+$("item-search").addEventListener("input", renderItems);
+$("item-kind").addEventListener("change", renderItems);
+$("item-inactive").addEventListener("change", renderItems);
+$("add-item").addEventListener("click", () => showItemForm(null));
+
+function showItemForm(item) {
+  const slot = $("item-form-slot"); slot.replaceChildren();
+  const form = el("form", "panel");
+  form.append(el("h3", "", item ? "Edit " + item.code : "Add item"));
+  const grid = el("div", "form-grid");
+  grid.innerHTML = `
+    <label class="field">Code<input name="code" required></label>
+    <label class="field">Item name<input name="name" required></label>
+    <label class="field">Kind<select name="kind"><option value="material">Material</option><option value="subcontractor">Subcontractor</option></select></label>
+    <label class="field" data-group>Material group<select name="material_group"><option value="installation">Installation materials</option><option value="accessories">Accessories</option><option value="fittings">Fittings</option></select></label>
+    <label class="field">Unit of measure<input name="uom" placeholder="m, pc, unit, lot"></label>
+    <label class="field">Price (EGP)<input name="unit_price" type="number" min="0" step="0.01" required></label>
+    <label class="field">Status<select name="active"><option value="true">Active</option><option value="false">Inactive</option></select></label>`;
+  form.append(grid);
+  const v = item || { code: "", name: "", kind: "material", material_group: "installation", uom: "", unit_price: "", active: true };
+  for (const k of ["code", "name", "kind", "uom", "unit_price"]) form.elements[k].value = v[k];
+  form.elements.material_group.value = v.material_group || "installation";
+  form.elements.active.value = String(v.active);
+  const groupField = grid.querySelector("[data-group]");
+  const syncGroup = () => { groupField.hidden = form.elements.kind.value !== "material"; };
+  form.elements.kind.addEventListener("change", syncGroup); syncGroup();
+  const actions = el("div", "form-actions");
+  const save = el("button", "btn btn-primary", item ? "Save item" : "Add item"); save.type = "submit";
+  const cancel = el("button", "btn", "Cancel"); cancel.type = "button"; cancel.addEventListener("click", () => slot.replaceChildren());
+  actions.append(save, cancel);
+  if (item) {
+    const del = el("button", "btn btn-danger", "Delete"); del.type = "button";
+    del.addEventListener("click", async () => {
+      if (!confirm("Delete " + item.code + " from the price list?")) return;
+      if (await run(db.from("cost_items").delete().eq("id", item.id), "Item deleted.")) { slot.replaceChildren(); loadItems(); }
+    });
+    actions.append(del);
+  }
+  form.append(actions);
+  form.addEventListener("submit", async e => {
+    e.preventDefault();
+    const f = form.elements;
+    const row = { code: f.code.value.trim(), name: f.name.value.trim(), kind: f.kind.value, uom: f.uom.value.trim(),
+      material_group: f.kind.value === "material" ? f.material_group.value : null,
+      unit_price: num(f.unit_price.value), active: f.active.value === "true" };
+    save.disabled = true;
+    const ok = item ? await run(db.from("cost_items").update(row).eq("id", item.id), "Item saved.")
+                    : await run(db.from("cost_items").insert(row), "Item added.");
+    save.disabled = false;
+    if (ok) { slot.replaceChildren(); loadItems(); }
+  });
+  slot.append(form);
+  form.elements.code.focus();
+}
+
+/* ---------- import ---------- */
+const HEADER_ALIASES = {
+  code: "code", item_code: "code", sku: "code",
+  name: "name", item: "name", item_name: "name", description: "name",
+  kind: "kind", type: "kind",
+  group: "material_group", material_group: "material_group", category: "material_group",
+  uom: "uom", unit: "uom", unit_of_measure: "uom",
+  unit_price: "unit_price", price: "unit_price", cost: "unit_price", unit_cost: "unit_price",
+};
+function parseKind(v) {
+  const s = String(v).trim().toLowerCase();
+  if (["material", "materials", "mat", "m"].includes(s)) return "material";
+  if (["subcontractor", "subcontract", "sub", "s", "subcontractors"].includes(s)) return "subcontractor";
+  return null;
+}
+function parseGroup(v) {
+  const s = String(v).trim().toLowerCase();
+  if (s.startsWith("install")) return "installation";
+  if (s.startsWith("access")) return "accessories";
+  if (s.startsWith("fitting")) return "fittings";
+  return null;
+}
+
+$("download-template").addEventListener("click", () => {
+  const blob = new Blob(["code,name,kind,group,uom,unit_price\nCU-0635,Copper pipe 6.35 mm,material,installation,m,0\nLB-WALL,Wall unit installation,subcontractor,,unit,0\n"], { type: "text/csv" });
+  const a = el("a"); a.href = URL.createObjectURL(blob); a.download = "price-list-template.csv"; a.click();
+  setTimeout(() => URL.revokeObjectURL(a.href), 1000);
+});
+
+$("import-file").addEventListener("change", async e => {
+  const file = e.target.files[0]; e.target.value = "";
+  if (!file) return;
+  let rows;
+  try {
+    const wb = XLSX.read(await file.arrayBuffer());
+    rows = XLSX.utils.sheet_to_json(wb.Sheets[wb.SheetNames[0]], { defval: "" });
+  } catch (err) { say("Couldn't read that file: " + err.message, true); return; }
+  const byCode = new Map(state.items.map(i => [i.code.toLowerCase(), i]));
+  const seen = new Set();
+  state.importRows = rows.map((raw, n) => {
+    const r = {};
+    for (const k in raw) { const key = HEADER_ALIASES[k.trim().toLowerCase().replace(/[\s-]+/g, "_")]; if (key) r[key] = raw[k]; }
+    const out = { line: n + 2, code: String(r.code ?? "").trim(), name: String(r.name ?? "").trim(), kind: parseKind(r.kind ?? ""),
+      uom: String(r.uom ?? "").trim(), unit_price: Number(String(r.unit_price ?? "").replace(/[, ]/g, "")) };
+    out.material_group = out.kind === "material" ? parseGroup(r.material_group ?? "") : null;
+    const problems = [];
+    if (!out.code) problems.push("no code");
+    if (!out.name) problems.push("no name");
+    if (!out.kind) problems.push("kind must be material or subcontractor");
+    if (out.kind === "material" && !out.material_group) problems.push("group must be installation, accessories or fittings");
+    if (String(r.unit_price ?? "").trim() === "" || !isFinite(out.unit_price) || out.unit_price < 0) problems.push("price must be a number, 0 or more");
+    if (out.code && seen.has(out.code.toLowerCase())) problems.push("code repeated in the file");
+    if (out.code) seen.add(out.code.toLowerCase());
+    if (problems.length) return { ...out, status: "reject", why: problems.join(", ") };
+    const old = byCode.get(out.code.toLowerCase());
+    if (!old) return { ...out, status: "new" };
+    out.code = old.code;
+    const same = old.name === out.name && old.kind === out.kind && old.material_group === out.material_group && old.uom === out.uom && num(old.unit_price) === out.unit_price && old.active;
+    return { ...out, status: same ? "same" : "update", why: same ? "" : "was " + fmtMoney(old.unit_price) };
+  });
+  renderImport(file.name);
+});
+
+function renderImport(fileName) {
+  const slot = $("import-slot"); slot.replaceChildren();
+  const rows = state.importRows; if (!rows) return;
+  const count = s => rows.filter(r => r.status === s).length;
+  const panel = el("div", "panel");
+  panel.append(el("h3", "", "Import preview: " + fileName));
+  panel.append(el("p", "msg", `${count("new")} new, ${count("update")} updated, ${count("same")} unchanged, ${count("reject")} rejected. Rejected rows are skipped.`));
+  const wrap = el("div", "table-wrap"); const t = el("table");
+  t.innerHTML = '<thead><tr><th>Row</th><th>Result</th><th>Code</th><th>Item</th><th>Group</th><th>Unit</th><th class="num-cell">Price</th><th>Note</th></tr></thead>';
+  const body = el("tbody");
+  for (const r of rows) {
+    const tr = el("tr"); const res = el("td"); res.append(el("span", "tag " + r.status, { new: "New", update: "Update", same: "Unchanged", reject: "Rejected" }[r.status]));
+    tr.append(el("td", "", r.line), res, el("td", "", r.code), el("td", "", r.name), el("td", "", r.kind ? GROUPS[groupOf(r)] : ""),
+      el("td", "", r.uom), el("td", "num-cell", isFinite(r.unit_price) ? fmtAmount(r.unit_price) : ""), el("td", "", r.why || ""));
+    body.append(tr);
+  }
+  t.append(body); wrap.append(t); panel.append(wrap);
+  const actions = el("div", "form-actions");
+  const go = el("button", "btn btn-primary", "Import " + (count("new") + count("update")) + " rows"); go.type = "button";
+  go.disabled = !(count("new") + count("update"));
+  const cancel = el("button", "btn", "Cancel"); cancel.type = "button";
+  cancel.addEventListener("click", () => { state.importRows = null; slot.replaceChildren(); });
+  go.addEventListener("click", async () => {
+    const payload = rows.filter(r => r.status === "new" || r.status === "update")
+      .map(r => ({ code: r.code, name: r.name, kind: r.kind, material_group: r.material_group, uom: r.uom, unit_price: r.unit_price, active: true }));
+    go.disabled = true;
+    if (await run(db.from("cost_items").upsert(payload, { onConflict: "code" }), payload.length + " items imported.")) {
+      state.importRows = null; slot.replaceChildren(); loadItems();
+    } else go.disabled = false;
+  });
+  actions.append(go, cancel); panel.append(actions);
+  slot.append(panel);
+}
+
+/* ---------- projects (from the project flow page) ---------- */
+async function loadProjects() {
+  const data = await run(db.from("projects").select("id,name,customer,status").order("name"));
+  if (data) state.projects = data;
+}
+function fillProjectSelect(select, value) {
+  select.replaceChildren(new Option("No project", ""));
+  for (const p of state.projects) select.append(new Option(p.name + (p.status === "closed" ? " (closed)" : ""), p.id));
+  select.value = value || "";
+}
+
+/* ---------- estimates list ---------- */
+async function loadEstimates() {
+  const data = await run(db.from("estimate_summary").select("*").order("updated_at", { ascending: false }));
+  if (!data) return;
+  state.estimates = data;
+  renderEstimates();
+}
+
+function renderEstimates() {
+  const body = $("estimates-body"); body.replaceChildren();
+  const q = $("est-search").value.trim().toLowerCase(), st = $("est-status").value;
+  const rows = state.estimates.filter(e => (!st || e.status === st)
+    && (!q || [e.name, e.customer, e.sales_person].some(v => (v || "").toLowerCase().includes(q))));
+  if (!rows.length) {
+    const td = el("td", "empty", state.estimates.length ? "No estimates match." : "No estimates yet. Start with New estimate."); td.colSpan = 10;
+    body.append(el("tr")); body.lastChild.append(td); return;
+  }
+  for (const e of rows) {
+    const tr = el("tr", e.id === state.estId ? "is-selected" : "");
+    const status = el("td", e.status === "final" ? "status-final" : "", e.status === "final" ? "Final" : "Draft");
+    const margin = el("td", "num-cell" + (num(e.margin_pct_actual) < num(e.margin_pct) ? " margin-low" : ""), e.margin_pct_actual == null ? "" : fmtPct(e.margin_pct_actual));
+    tr.append(el("td", "", e.name), el("td", "", e.customer), el("td", "", e.sales_person), el("td", "", e.zone_name + " " + fmtPct(e.zone_factor_pct)),
+      el("td", "num-cell", fmtQty(e.units)), el("td", "num-cell", fmtMoney(e.total_cost)), el("td", "num-cell", fmtMoney(e.net_sales)), margin, status);
+    const act = el("td"); const open = el("button", "btn btn-link", "Open"); open.type = "button";
+    open.setAttribute("aria-label", "Open " + e.name);
+    open.addEventListener("click", () => openEstimate(e.id));
+    act.append(open); tr.append(act); body.append(tr);
+  }
+}
+$("est-search").addEventListener("input", renderEstimates);
+$("est-status").addEventListener("change", renderEstimates);
+
+$("new-estimate").addEventListener("click", () => {
+  const slot = $("new-estimate-slot"); slot.replaceChildren();
+  const form = el("form", "panel");
+  form.append(el("h3", "", "New estimate"));
+  const grid = el("div", "form-grid");
+  grid.innerHTML = `
+    <label class="field">Project name<input name="name" required placeholder="e.g. Villa 12, New Cairo"></label>
+    <label class="field">Customer<input name="customer"></label>
+    <label class="field">First indoor unit type<input name="unit_name" value="Indoor unit"></label>
+    <label class="field">Number of indoor units<input name="quantity" type="number" min="0" step="1" value="1" required></label>`;
+  form.append(grid);
+  const actions = el("div", "form-actions");
+  const save = el("button", "btn btn-primary", "Create estimate"); save.type = "submit";
+  const cancel = el("button", "btn", "Cancel"); cancel.type = "button"; cancel.addEventListener("click", () => slot.replaceChildren());
+  actions.append(save, cancel); form.append(actions);
+  form.addEventListener("submit", async ev => {
+    ev.preventDefault();
+    const f = form.elements; save.disabled = true;
+    const est = await run(db.from("estimates").insert({ name: f.name.value.trim(), customer: f.customer.value.trim() }).select().single());
+    if (est) await run(db.from("estimate_units").insert({ estimate_id: est.id, name: f.unit_name.value.trim() || "Indoor unit", quantity: num(f.quantity.value), position: 1 }));
+    save.disabled = false;
+    if (est) { slot.replaceChildren(); say("Estimate created. Add the cost lines for one unit."); await loadEstimates(); openEstimate(est.id); }
+  });
+  slot.append(form);
+  form.elements.name.focus();
+});
+
+/* ---------- estimate editor ---------- */
+async function openEstimate(id) {
+  state.estId = id;
+  await loadEstimate();
+  renderEstimates();
+  $("editor").scrollIntoView({ behavior: "smooth", block: "start" });
+}
+
+async function loadEstimate() {
+  const id = state.estId; if (!id) return;
+  const [e, u, s] = await Promise.all([
+    db.from("estimate_summary").select("*").eq("id", id).maybeSingle(),
+    db.from("estimate_units").select("*, estimate_lines(*)").eq("estimate_id", id).order("position"),
+    db.from("estimate_unit_summary").select("*").eq("estimate_id", id),
+  ]);
+  const error = e.error || u.error || s.error;
+  if (error) { say(explain(error), true); return; }
+  if (!e.data) { state.estId = null; state.est = null; $("editor").hidden = true; return; }
+  state.est = e.data;
+  state.units = u.data.map(x => ({ ...x, estimate_lines: x.estimate_lines.sort((a, b) => a.position - b.position) }));
+  state.unitSums = s.data;
+  const i = state.estimates.findIndex(x => x.id === id);
+  if (i >= 0) { state.estimates[i] = e.data; renderEstimates(); }
+  renderEditor();
+}
+
+// keep focus on the same field after a save re-renders the editor
+function rememberFocus() { const a = document.activeElement; return a && a.dataset ? a.dataset.key : null; }
+function restoreFocus(key) { if (!key) return; const n = document.querySelector(`[data-key="${CSS.escape(key)}"]`); if (n) n.focus(); }
+
+function renderEditor() {
+  const e = state.est; if (!e) return;
+  const focusKey = rememberFocus();
+  $("editor").hidden = false;
+  $("editor-title").textContent = e.name;
+  $("editor-meta").textContent = [e.customer, e.sales_person && "Sales: " + e.sales_person, e.location].filter(Boolean).join(", ")
+    || "Add the customer, sales person and location below.";
+  renderStats(e);
+  fillDetails(e);
+  const box = $("units"); box.replaceChildren();
+  for (const u of state.units) box.append(unitCard(u));
+  if (!state.units.length) box.append(el("p", "empty", "No unit types yet. Add one to start."));
+  renderSummary(calc());
+  restoreFocus(focusKey);
+}
+
+function renderStats(e) {
+  const s = $("stats"); s.replaceChildren();
+  const item = (label, value) => { const li = el("li"); li.append(el("span", "", label), el("b", "", value)); s.append(li); };
+  item("Indoor units", fmtQty(e.units));
+  item("Location zone", e.zone_name + " " + fmtPct(e.zone_factor_pct));
+  item("Total cost", fmtMoney(e.total_cost));
+  item("Price with VAT", fmtMoney(e.sales_with_vat));
+}
+
+/* ---------- project details and rates (save when a field is left) ---------- */
+const DETAIL_FIELDS = ["name", "customer", "sales_person", "location", "status", "notes"];
+const RATE_FIELDS = ["overhead_pct", "indirect_pct", "marketing_amount", "margin_pct", "discount_pct", "vat_pct"];
+
+function fillDetails(e) {
+  const d = $("details-form").elements, r = $("rates-form").elements;
+  for (const k of DETAIL_FIELDS) if (document.activeElement !== d[k]) d[k].value = e[k] ?? "";
+  if (document.activeElement !== d.project_id) fillProjectSelect(d.project_id, e.project_id);
+  for (const k of RATE_FIELDS) if (document.activeElement !== r[k]) r[k].value = num(e[k]);
+  const zs = $("zones");
+  zs.querySelectorAll("label").forEach(n => n.remove());
+  for (const z of state.zones) {
+    const lab = el("label", "zone");
+    const inp = el("input"); inp.type = "radio"; inp.name = "zone"; inp.value = z.code; inp.checked = z.code === e.zone; inp.dataset.key = "zone-" + z.code;
+    const top = el("b", "", z.name + " "); top.append(el("em", "", fmtPct(z.factor_pct)));
+    lab.append(inp, top, el("span", "", z.description));
+    zs.append(lab);
+  }
+}
+
+async function saveEstimateField(stateId, patch) {
+  const st = $(stateId); st.className = "save-state"; st.textContent = "Saving…";
+  const { error } = await db.from("estimates").update(patch).eq("id", state.estId);
+  if (error) { st.className = "save-state is-error"; st.textContent = "Couldn't save: " + explain(error); return; }
+  st.textContent = "Saved at " + new Date().toLocaleTimeString("en-GB", { hour: "2-digit", minute: "2-digit" });
+  await loadEstimate();
+}
+
+$("details-form").addEventListener("submit", ev => ev.preventDefault());
+$("rates-form").addEventListener("submit", ev => ev.preventDefault());
+$("details-form").addEventListener("input", ev => { if (ev.target.name === "zone") renderSummary(calc()); });
+$("details-form").addEventListener("change", ev => {
+  const t = ev.target; if (!t.name) return;
+  let v = t.value;
+  if (t.name === "name") { v = v.trim(); if (!v) { t.value = state.est.name; say("The project name can't be empty.", true); return; } }
+  else if (t.name === "project_id") v = v || null;
+  else if (["customer", "sales_person", "location"].includes(t.name)) v = v.trim();
+  saveEstimateField("details-state", { [t.name]: v });
+});
+$("rates-form").addEventListener("input", () => renderSummary(calc()));
+$("rates-form").addEventListener("change", ev => {
+  const t = ev.target; if (!t.name) return;
+  if (t.value === "" || !t.checkValidity()) {
+    const st = $("rates-state"); st.className = "save-state is-error";
+    st.textContent = "Not saved: " + (t.validationMessage || "enter a number") + " The last saved value is still used.";
+    return;
+  }
+  saveEstimateField("rates-state", { [t.name]: Number(t.value) });
+});
+
+/* ---------- live price build-up: the same math as the estimate_summary view ---------- */
+function liveInputs() {
+  const e = state.est, r = $("rates-form").elements, d = $("details-form").elements;
+  const v = {};
+  for (const k of RATE_FIELDS) { const x = r[k]; v[k] = x && x.value !== "" && x.checkValidity() ? Number(x.value) : num(e[k]); }
+  v.zone = (d.zone && d.zone.value) || e.zone;
+  return v;
+}
+
+function calc() {
+  const v = liveInputs(), z = zoneByCode(v.zone);
+  const t = { units: 0, mat_installation: 0, mat_accessories: 0, mat_fittings: 0, material: 0, subcontractor: 0 };
+  for (const s of state.unitSums) {
+    const q = num(s.quantity); t.units += q;
+    for (const k of ["mat_installation", "mat_accessories", "mat_fittings", "material", "subcontractor"]) t[k] += num(s[k]) * q;
+  }
+  const direct_base = t.material + t.subcontractor;
+  const direct = direct_base * num(z.factor_pct) / 100;
+  const overhead = direct * v.overhead_pct / 100;
+  const indirect = direct * v.indirect_pct / 100;
+  const marketing = v.marketing_amount;
+  const total_cost = direct + overhead + indirect + marketing;
+  const sales_price = total_cost / (1 - v.margin_pct / 100);
+  const discount_amount = sales_price * v.discount_pct / 100;
+  const net_sales = sales_price - discount_amount;
+  const vat_amount = net_sales * v.vat_pct / 100;
+  const margin_amount = net_sales - total_cost;
+  return {
+    ...v, ...t, zone_name: z.name, zone_factor_pct: num(z.factor_pct),
+    direct_base, zone_uplift: direct - direct_base, direct, overhead, indirect, marketing, total_cost,
+    sales_price, discount_amount, net_sales, vat_amount, sales_with_vat: net_sales + vat_amount,
+    margin_amount, margin_pct_actual: net_sales > 0 ? margin_amount / net_sales * 100 : null,
+  };
+}
+
+function renderSummary(c) {
+  const box = $("summary"); box.replaceChildren();
+  box.append(el("h3", "", "Price build-up"));
+  box.append(el("p", "sub", fmtQty(c.units) + " indoor units, " + c.zone_name + " zone " + fmtPct(c.zone_factor_pct)
+    + (c.units ? ". Total cost per unit " + fmtMoney(c.total_cost / c.units) : "")));
+  const dl = el("dl", "build");
+  const row = (label, v, cls) => { const d = el("div", cls || ""); d.append(el("dt", "", label), el("dd", "", fmtAmount(v))); dl.append(d); };
+  row("Installation materials", c.mat_installation, "indent");
+  row("Accessories", c.mat_accessories, "indent");
+  row("Fittings", c.mat_fittings, "indent");
+  row("Material", c.material, "strong");
+  row("Subcontractor", c.subcontractor, "strong");
+  row("Direct cost at central prices", c.direct_base, "gap");
+  row("Location uplift, " + c.zone_name + " " + fmtPct(c.zone_factor_pct), c.zone_uplift);
+  row("Direct cost", c.direct, "strong");
+  row("Overhead " + fmtPct(c.overhead_pct) + " of direct", c.overhead, "gap");
+  row("Indirect " + fmtPct(c.indirect_pct) + " of direct", c.indirect);
+  row("Marketing expense", c.marketing);
+  row("Total cost", c.total_cost, "strong");
+  row("Sales price, cost ÷ " + (1 - c.margin_pct / 100).toFixed(2), c.sales_price, "gap");
+  row("Discount " + fmtPct(c.discount_pct), c.discount_amount ? -c.discount_amount : 0);
+  row("Net sales price", c.net_sales, "strong");
+  row("VAT " + fmtPct(c.vat_pct), c.vat_amount);
+  row("Sales price with VAT (EGP)", c.sales_with_vat, "price");
+  box.append(dl);
+  const low = c.margin_pct_actual != null && c.margin_pct_actual < c.margin_pct - 0.005;
+  const mb = el("div", "margin-box");
+  const cell = (label, text) => { const d = el("div"); d.append(el("span", "", label), el("b", low ? "margin-low" : "", text)); mb.append(d); };
+  cell("Margin", fmtMoney(c.margin_amount));
+  cell("Margin % of net price", c.margin_pct_actual == null ? "" : fmtPct(c.margin_pct_actual));
+  box.append(mb);
+  if (low) box.append(el("p", "note margin-low", "The discount takes the margin below the " + fmtPct(c.margin_pct) + " target."));
+  box.append(el("p", "note", "VAT is collected for the tax authority, so it doesn't change cost or margin."));
+}
+
+/* ---------- indoor unit cards ---------- */
+function cellInput(value, key, onSave, step) {
+  const i = el("input", "cell-input"); i.type = "number"; i.min = "0"; i.step = step || "any"; i.value = num(value); i.dataset.key = key;
+  i.addEventListener("change", () => { if (i.value === "" || Number(i.value) < 0) { i.value = num(value); return; } onSave(Number(i.value)); });
+  return i;
+}
+
+function unitCard(u) {
+  const sum = state.unitSums.find(s => s.unit_id === u.id) || {};
+  const card = el("article", "unit-card");
+  const head = el("div", "unit-head");
+  const nameField = el("label", "field", "Indoor unit type");
+  const nameInput = el("input"); nameInput.value = u.name; nameInput.dataset.key = "uname-" + u.id;
+  nameInput.addEventListener("change", () => saveUnit(u.id, { name: nameInput.value.trim() || "Indoor unit" }));
+  nameField.append(nameInput);
+  const qtyField = el("label", "field qty", "Number of indoor units");
+  const qtyInput = el("input"); qtyInput.type = "number"; qtyInput.min = "0"; qtyInput.step = "1"; qtyInput.value = num(u.quantity); qtyInput.dataset.key = "uqty-" + u.id;
+  qtyInput.addEventListener("change", () => { if (qtyInput.value === "" || Number(qtyInput.value) < 0) { qtyInput.value = num(u.quantity); return; } saveUnit(u.id, { quantity: Number(qtyInput.value) }); });
+  qtyField.append(qtyInput);
+  const del = el("button", "btn btn-danger", "Remove type"); del.type = "button";
+  del.addEventListener("click", async () => {
+    if (!confirm("Remove " + u.name + " and its cost lines?")) return;
+    if (await run(db.from("estimate_units").delete().eq("id", u.id), "Unit type removed.")) afterEstimateChange();
+  });
+  head.append(nameField, qtyField, del);
+  card.append(head);
+
+  const wrap = el("div", "table-wrap"); const t = el("table");
+  t.innerHTML = '<thead><tr><th>Item</th><th>Unit</th><th class="num-cell">Qty per indoor unit</th><th class="num-cell">Price (EGP)</th><th class="num-cell">Line total</th><th><span class="visually-hidden">Actions</span></th></tr></thead>';
+  const body = el("tbody");
+  const lines = u.estimate_lines.map(l => ({ l, item: itemById(l.item_id) || { code: "?", name: "Unknown item", kind: "material", material_group: "installation", uom: "", unit_price: l.unit_price } }));
+  for (const g of Object.keys(GROUPS)) {
+    const mine = lines.filter(x => groupOf(x.item) === g);
+    if (!mine.length) continue;
+    const gr = el("tr", "group-row");
+    const gname = el("td", "", GROUPS[g]); gname.colSpan = 4;
+    gr.append(gname, el("td", "num-cell", fmtAmount(mine.reduce((s, x) => s + num(x.l.qty_per_unit) * num(x.l.unit_price), 0))), el("td"));
+    body.append(gr);
+    for (const { l, item } of mine) {
+      const tr = el("tr");
+      const nameCell = el("td"); nameCell.append(el("b", "", item.code + " "), document.createTextNode(item.name));
+      if (num(item.unit_price) !== num(l.unit_price)) nameCell.append(el("div", "tag update", "Price list now " + fmtMoney(item.unit_price)));
+      const qtyCell = el("td", "num-cell"); qtyCell.append(cellInput(l.qty_per_unit, "lq-" + l.id, v => saveLine(l.id, { qty_per_unit: v })));
+      const priceCell = el("td", "num-cell"); priceCell.append(cellInput(l.unit_price, "lp-" + l.id, v => saveLine(l.id, { unit_price: v }), "0.01"));
+      const rm = el("button", "btn btn-link", "Remove"); rm.type = "button"; rm.setAttribute("aria-label", "Remove " + item.name);
+      rm.addEventListener("click", async () => { if (await run(db.from("estimate_lines").delete().eq("id", l.id))) afterEstimateChange(); });
+      const act = el("td"); act.append(rm);
+      tr.append(nameCell, el("td", "", item.uom), qtyCell, priceCell, el("td", "num-cell", fmtAmount(num(l.qty_per_unit) * num(l.unit_price))), act);
+      body.append(tr);
+    }
+  }
+  if (!lines.length) { const td = el("td", "empty", "No cost lines yet. Add the installation materials, accessories, fittings and subcontractor work for one indoor unit."); td.colSpan = 6; body.append(el("tr")); body.lastChild.append(td); }
+  t.append(body); wrap.append(t); card.append(wrap);
+
+  // add a line from the price list, grouped the same way
+  const add = el("form", "add-line");
+  const sel = el("select"); sel.setAttribute("aria-label", "Item to add"); sel.dataset.key = "addsel-" + u.id;
+  sel.append(new Option("Choose an item from the price list", ""));
+  for (const g of Object.keys(GROUPS)) {
+    const og = document.createElement("optgroup"); og.label = GROUPS[g];
+    for (const i of state.items.filter(i => i.active && groupOf(i) === g)) og.append(new Option(`${i.code}  ${i.name}  (${fmtAmount(i.unit_price)} / ${i.uom || "unit"})`, i.id));
+    if (og.children.length) sel.append(og);
+  }
+  const qty = el("input", "cell-input"); qty.type = "number"; qty.min = "0"; qty.step = "any"; qty.value = "1"; qty.setAttribute("aria-label", "Quantity per indoor unit");
+  const btn = el("button", "btn", "Add line"); btn.type = "submit";
+  add.append(sel, qty, btn);
+  if (!state.items.some(i => i.active)) { sel.disabled = qty.disabled = btn.disabled = true; sel.options[0].text = "The price list is empty. Add items in Price list first."; }
+  add.addEventListener("submit", async ev => {
+    ev.preventDefault();
+    const item = itemById(sel.value); if (!item) { sel.focus(); return; }
+    const pos = u.estimate_lines.reduce((m, l) => Math.max(m, l.position), 0) + 1;
+    if (await run(db.from("estimate_lines").insert({ unit_id: u.id, item_id: item.id, qty_per_unit: num(qty.value), unit_price: item.unit_price, position: pos }))) {
+      await afterEstimateChange(); restoreFocus("addsel-" + u.id);
+    }
+  });
+  card.append(add);
+
+  const foot = el("div", "unit-foot");
+  const cell = (label, v, cls) => { const d = el("div", cls || ""); d.append(el("span", "", label), el("b", "", fmtAmount(v))); return d; };
+  foot.append(
+    cell("Material per unit", sum.material), cell("Subcontractor per unit", sum.subcontractor),
+    cell("Direct cost per unit", sum.direct_base, "total"), cell("Direct for " + fmtQty(u.quantity) + " units", sum.direct_base_total, "total"));
+  card.append(foot);
+  return card;
+}
+
+async function saveUnit(id, patch) { if (await run(db.from("estimate_units").update(patch).eq("id", id))) afterEstimateChange(); }
+async function saveLine(id, patch) { if (await run(db.from("estimate_lines").update(patch).eq("id", id))) afterEstimateChange(); }
+async function afterEstimateChange() {
+  // touch the estimate so the list sorts by last change, then recalc from the views
+  await db.from("estimates").update({ updated_at: new Date().toISOString() }).eq("id", state.estId);
+  await loadEstimate();
+}
+
+$("add-unit").addEventListener("click", async () => {
+  const pos = state.units.reduce((m, u) => Math.max(m, u.position), 0) + 1;
+  if (await run(db.from("estimate_units").insert({ estimate_id: state.estId, name: "Indoor unit " + pos, quantity: 1, position: pos }))) afterEstimateChange();
+});
+
+$("delete-estimate").addEventListener("click", async () => {
+  if (!confirm("Delete the estimate " + state.est.name + "? The change log keeps a copy.")) return;
+  if (await run(db.from("estimates").delete().eq("id", state.estId), "Estimate deleted.")) {
+    state.estId = null; state.est = null; $("editor").hidden = true; loadEstimates();
+  }
+});
+
+$("refresh-prices").addEventListener("click", async () => {
+  const stale = state.units.flatMap(u => u.estimate_lines).filter(l => { const i = itemById(l.item_id); return i && num(i.unit_price) !== num(l.unit_price); });
+  if (!stale.length) { say("All lines already use the current price list."); return; }
+  if (!confirm(stale.length + " lines have a different price from the price list. Update them to the current prices?")) return;
+  const results = await Promise.all(stale.map(l => db.from("estimate_lines").update({ unit_price: itemById(l.item_id).unit_price }).eq("id", l.id)));
+  const failed = results.find(r => r.error);
+  if (failed) say(explain(failed.error), true); else say(stale.length + " prices updated.");
+  afterEstimateChange();
+});
+
+/* ---------- Excel export (live formulas, cached values from the database) ---------- */
+$("export-xlsx").addEventListener("click", () => {
+  const e = state.est, ws = {}, cols = 7;
+  let r = 0;
+  const ref = (c, row) => XLSX.utils.encode_cell({ r: row, c });
+  const MONEY = "#,##0.00", PCT = "0.00%";
+  const put = (c, v, z) => { ws[ref(c, r)] = typeof v === "number" ? { t: "n", v, z } : { t: "s", v: String(v ?? "") }; return ref(c, r); };
+  const fx = (c, f, v, z) => { ws[ref(c, r)] = { t: "n", f, v: num(v), z: z || MONEY }; return ref(c, r); };
+  const abs = a => a.replace(/([A-Z]+)(\d+)/, "$$$1$$$2");
+
+  put(0, "Tradex cost estimate"); r++;
+  for (const [label, v] of [["Project name", e.name], ["Customer", e.customer], ["Sales person", e.sales_person], ["Project location", e.location],
+    ["Location zone", e.zone_name], ["Status", e.status === "final" ? "Final" : "Draft"]]) { put(0, label); put(1, v); r++; }
+  r++;
+  put(0, "Zone % of central cost"); const ZF = abs(put(1, num(e.zone_factor_pct) / 100, PCT)); r++;
+  put(0, "Overhead % of direct cost"); const OH = abs(put(1, num(e.overhead_pct) / 100, PCT)); r++;
+  put(0, "Indirect % of direct cost"); const IN = abs(put(1, num(e.indirect_pct) / 100, PCT)); r++;
+  put(0, "Marketing expense"); const MK = abs(put(1, num(e.marketing_amount), MONEY)); r++;
+  put(0, "Target margin % of sales price"); const MG = abs(put(1, num(e.margin_pct) / 100, PCT)); r++;
+  put(0, "Discount % of sales price"); const DS = abs(put(1, num(e.discount_pct) / 100, PCT)); r++;
+  put(0, "VAT %"); const VT = abs(put(1, num(e.vat_pct) / 100, PCT)); r += 2;
+
+  const parts = { installation: [], accessories: [], fittings: [], subcontractor: [] };
+  for (const u of state.units) {
+    const s = state.unitSums.find(x => x.unit_id === u.id) || {};
+    put(0, "Indoor unit type"); put(1, u.name); put(3, "Units"); const Q = ref(4, r); put(4, num(u.quantity), "#,##0"); r++;
+    ["Code", "Item", "Group", "Unit", "Qty per unit", "Unit price", "Line total"].forEach((h, c) => put(c, h)); r++;
+    const first = r + 1;
+    for (const l of u.estimate_lines) {
+      const i = itemById(l.item_id) || { code: "?", name: "Unknown item", kind: "material", material_group: "installation", uom: "" };
+      put(0, i.code); put(1, i.name); put(2, GROUPS[groupOf(i)]); put(3, i.uom); put(4, num(l.qty_per_unit), "#,##0.###"); put(5, num(l.unit_price), MONEY);
+      fx(6, `E${r + 1}*F${r + 1}`, num(l.qty_per_unit) * num(l.unit_price)); r++;
+    }
+    const last = r;
+    const sumGroup = g => last >= first ? `SUMIFS(G${first}:G${last},C${first}:C${last},"${GROUPS[g]}")` : "0";
+    const cached = { installation: s.mat_installation, accessories: s.mat_accessories, fittings: s.mat_fittings, subcontractor: s.subcontractor };
+    const cellsOf = {};
+    for (const g of Object.keys(GROUPS)) { put(5, GROUPS[g] + " per unit"); cellsOf[g] = fx(6, sumGroup(g), cached[g]); r++; }
+    put(5, "Direct cost per unit"); const D = fx(6, Object.values(cellsOf).join("+"), s.direct_base); r++;
+    put(5, "Direct for all units"); fx(6, `${D}*${Q}`, s.direct_base_total); r += 2;
+    for (const g of Object.keys(GROUPS)) parts[g].push(`${cellsOf[g]}*${Q}`);
+  }
+  const join = a => a.length ? a.join("+") : "0";
+  put(0, "Price build-up"); r++;
+  put(0, "Installation materials"); const A1 = fx(1, join(parts.installation), e.mat_installation); r++;
+  put(0, "Accessories"); const A2 = fx(1, join(parts.accessories), e.mat_accessories); r++;
+  put(0, "Fittings"); const A3 = fx(1, join(parts.fittings), e.mat_fittings); r++;
+  put(0, "Material"); const MT = fx(1, `${A1}+${A2}+${A3}`, e.material); r++;
+  put(0, "Subcontractor"); const SB = fx(1, join(parts.subcontractor), e.subcontractor); r++;
+  put(0, "Direct cost at central prices"); const DB = fx(1, `${MT}+${SB}`, e.direct_base); r++;
+  put(0, "Location uplift"); fx(1, `${DB}*(${ZF}-1)`, e.zone_uplift); r++;
+  put(0, "Direct cost"); const DC = fx(1, `${DB}*${ZF}`, e.direct); r++;
+  put(0, "Overhead"); const O = fx(1, `${DC}*${OH}`, e.overhead); r++;
+  put(0, "Indirect"); const I = fx(1, `${DC}*${IN}`, e.indirect); r++;
+  put(0, "Marketing expense"); const MKT = fx(1, MK, e.marketing); r++;
+  put(0, "Total cost"); const TC = fx(1, `${DC}+${O}+${I}+${MKT}`, e.total_cost); r++;
+  put(0, "Sales price"); const SP = fx(1, `${TC}/(1-${MG})`, e.sales_price); r++;
+  put(0, "Discount"); const DI = fx(1, `${SP}*${DS}`, e.discount_amount); r++;
+  put(0, "Net sales price"); const NS = fx(1, `${SP}-${DI}`, e.net_sales); r++;
+  put(0, "VAT"); const VA = fx(1, `${NS}*${VT}`, e.vat_amount); r++;
+  put(0, "Sales price with VAT"); fx(1, `${NS}+${VA}`, e.sales_with_vat); r++;
+  put(0, "Margin"); const MA = fx(1, `${NS}-${TC}`, e.margin_amount); r++;
+  put(0, "Margin % of net sales price"); fx(1, `IF(${NS}=0,0,${MA}/${NS})`, num(e.margin_pct_actual) / 100, PCT); r++;
+  r++; put(0, "Built by Salah Agent");
+
+  ws["!ref"] = XLSX.utils.encode_range({ s: { r: 0, c: 0 }, e: { r, c: cols - 1 } });
+  ws["!cols"] = [{ wch: 30 }, { wch: 36 }, { wch: 22 }, { wch: 8 }, { wch: 13 }, { wch: 30 }, { wch: 16 }];
+  const wb = XLSX.utils.book_new();
+  XLSX.utils.book_append_sheet(wb, ws, "Estimate");
+  XLSX.writeFile(wb, "Tradex estimate - " + e.name.replace(/[\\/:*?"<>|]/g, "-") + ".xlsx");
+});
+
+/* ---------- design A: four-step wizard and price readout ---------- */
+let currentStep = 1;
+const stepTitles = { 1: "Next: indoor units", 2: "Next: rates", 3: "Next: review the price", 4: "" };
+function showStep(n) {
+  currentStep = Math.min(4, Math.max(1, n));
+  document.querySelectorAll("#editor [data-step]").forEach(s => {
+    const on = Number(s.dataset.step) === currentStep;
+    s.hidden = !on;
+    if (on) { s.classList.remove("is-entering"); void s.offsetWidth; s.classList.add("is-entering"); }
+  });
+  document.querySelectorAll("#stepper button").forEach(b => {
+    const n2 = Number(b.dataset.go);
+    b.classList.toggle("is-done", n2 < currentStep);
+    if (n2 === currentStep) b.setAttribute("aria-current", "step"); else b.removeAttribute("aria-current");
+  });
+  $("step-back").disabled = currentStep === 1;
+  $("step-next").hidden = currentStep === 4;
+  $("step-next").textContent = stepTitles[currentStep];
+}
+$("stepper").addEventListener("click", ev => { const b = ev.target.closest("button[data-go]"); if (b) { showStep(Number(b.dataset.go)); $("editor").scrollIntoView({ behavior: "smooth", block: "start" }); } });
+$("step-back").addEventListener("click", () => { showStep(currentStep - 1); $("editor").scrollIntoView({ behavior: "smooth", block: "start" }); });
+$("step-next").addEventListener("click", () => { showStep(currentStep + 1); $("editor").scrollIntoView({ behavior: "smooth", block: "start" }); });
+
+function updateReadout(c) {
+  const r = $("readout"); r.replaceChildren();
+  const low = c.margin_pct_actual != null && c.margin_pct_actual < c.margin_pct - 0.005;
+  const cell = (label, value, cls) => { const d = el("div", cls || ""); d.append(el("span", "", label), el("b", "", value)); r.append(d); };
+  cell("Price with VAT", fmtMoney(c.sales_with_vat), "big");
+  cell("Total cost", fmtAmount(c.total_cost));
+  cell("Margin", c.margin_pct_actual == null ? "" : fmtPct(c.margin_pct_actual), low ? "low" : "");
+  cell("Indoor units", fmtQty(c.units));
+}
+const renderSummaryBase = renderSummary;
+renderSummary = c => { renderSummaryBase(c); updateReadout(c); };
+
+// one estimate at a time: the list steps aside while an estimate is open
+function setListVisible(on) {
+  for (const id of ["new-estimate-slot"]) $(id).hidden = !on;
+  document.querySelector("#view-estimates > .subhead").hidden = !on;
+  document.querySelector("#view-estimates > .toolbar").hidden = !on;
+  document.querySelector("#view-estimates > .table-wrap").hidden = !on;
+  $("intro").hidden = !on;
+}
+const openEstimateBase = openEstimate;
+openEstimate = async id => { const fresh = id !== state.estId; await openEstimateBase(id); setListVisible(false); if (fresh) showStep(1); window.scrollTo({ top: 0 }); };
+$("back-to-list").addEventListener("click", () => { state.estId = null; state.est = null; $("editor").hidden = true; setListVisible(true); loadEstimates(); });
+showStep(1);</script>
+</body>
+</html>

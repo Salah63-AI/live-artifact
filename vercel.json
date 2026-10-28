@@ -4,5 +4,9 @@
     { "source": "/", "destination": "/tradex-flow.html" },
     { "source": "/estimate", "destination": "/tradex-estimate.html" },
     { "source": "/quote", "destination": "/tradex-quote.html" }
+  ],
+  "redirects": [
+    { "source": "/a", "destination": "/designs/a/estimate.html", "permanent": false },
+    { "source": "/b", "destination": "/designs/b/estimate.html", "permanent": false }
   ]
 }

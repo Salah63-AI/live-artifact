@@ -1,0 +1,460 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Tradex Project Quote</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Archivo:wdth,wght@62..125,300..700&display=swap" rel="stylesheet">
+<script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2.49.4/dist/umd/supabase.js"></script>
+<script src="../config.js"></script>
+<style>
+:root {
+  --paper: #F3F7F6; --ink: #16302F; --ink-soft: #4B615F; --line: #CFDCD9; --pipe: #47BD9B; --teal-text: #1F7A62;
+  --bad: #B3261E; --hl: #E3F3EE; --field: #FFFFFF; --card: #FFFFFF;
+  color-scheme: light;
+}
+@media (prefers-color-scheme: dark) {
+  :root:not([data-theme="light"]) {
+    --paper: #0F1B1A; --ink: #DDE8E5; --ink-soft: #9AAEAA; --line: #2A3B39; --teal-text: #6FD3B3;
+    --bad: #F2847B; --hl: #16302C; --field: #15231F; --card: #132220; color-scheme: dark;
+  }
+}
+:root[data-theme="dark"] {
+  --paper: #0F1B1A; --ink: #DDE8E5; --ink-soft: #9AAEAA; --line: #2A3B39; --teal-text: #6FD3B3;
+  --bad: #F2847B; --hl: #16302C; --field: #15231F; --card: #132220; color-scheme: dark;
+}
+* { box-sizing: border-box; }
+body { margin: 0; background: var(--paper); color: var(--ink); font-family: Calibri, "Archivo", system-ui, sans-serif; font-size: 1rem; line-height: 1.5; -webkit-font-smoothing: antialiased; }
+.page { max-width: 72rem; margin: 0 auto; padding: 2.5rem 16px 4rem; }
+:focus-visible { outline: 3px solid var(--pipe); outline-offset: 3px; border-radius: 4px; }
+[hidden] { display: none !important; }
+.visually-hidden { position: absolute; width: 1px; height: 1px; overflow: hidden; clip: rect(0 0 0 0); white-space: nowrap; }
+
+.mast { display: flex; align-items: center; justify-content: space-between; flex-wrap: wrap; gap: 1rem; margin-bottom: 2.5rem; }
+.mast img { height: 44px; width: auto; mix-blend-mode: multiply; }
+.mast span { font-size: .875rem; color: var(--ink-soft); }
+@media (prefers-color-scheme: dark) { :root:not([data-theme="light"]) .mast img { mix-blend-mode: normal; background: #fff; padding: 6px 10px; border-radius: 8px; } }
+h1 { font-family: "Archivo", Calibri, system-ui, sans-serif; font-stretch: 125%; font-weight: 300; font-size: clamp(2.1rem, 5.4vw, 3.6rem); line-height: 1.05; letter-spacing: -0.01em; margin: 0 0 1rem; max-width: 18ch; }
+.lede { font-size: 1.125rem; color: var(--ink-soft); max-width: 44rem; margin: 0 0 2.25rem; }
+
+.btn { font: inherit; font-size: .875rem; line-height: 1.2; padding: .5rem .85rem; min-height: 2.5rem; border-radius: 8px; border: 1px solid var(--line); background: transparent; color: var(--ink); cursor: pointer; }
+.btn:hover { border-color: var(--pipe); }
+.btn-primary { background: var(--pipe); border-color: var(--pipe); color: #000; font-weight: 600; }
+.btn-primary:hover { background: #3AA888; }
+.btn-danger { color: var(--bad); }
+.btn-link { border: 0; padding: .25rem .4rem; min-height: 0; color: var(--teal-text); text-decoration: underline; text-underline-offset: 3px; }
+.btn:disabled { opacity: .5; cursor: default; }
+.field { display: grid; gap: .3rem; font-size: .875rem; color: var(--ink-soft); }
+.field input, .field textarea, .field select, .cell-input, .add-line select {
+  font: inherit; font-size: .95rem; color: var(--ink); background: var(--field); border: 1px solid var(--line); border-radius: 8px; padding: .5rem .65rem; width: 100%;
+}
+.field input:focus, .field select:focus, .cell-input:focus, .add-line select:focus { outline: 2px solid var(--pipe); outline-offset: 0; border-color: var(--pipe); }
+.cell-input { padding: .35rem .5rem; text-align: right; width: 7rem; font-variant-numeric: tabular-nums; }
+.form-grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(min(100%, 13rem), 1fr)); gap: .9rem 1.25rem; }
+.form-grid .wide { grid-column: 1 / -1; }
+.panel { margin: 0 0 1rem; padding: 1.25rem; border: 1px solid var(--line); border-radius: 12px; background: var(--card); }
+.msg { font-size: .9rem; margin: .5rem 0 0; }
+.msg.is-error { color: var(--bad); }
+.msg.is-ok { color: var(--teal-text); }
+.req { color: var(--bad); }
+
+.layout { display: grid; grid-template-columns: minmax(0, 1fr) 21rem; gap: 1.75rem; align-items: start; }
+.step-sec { margin: 0 0 2rem; }
+.step-sec > h2 { display: flex; align-items: baseline; gap: .6rem; margin: 0 0 .9rem; font-size: 1.2rem; font-weight: 600; }
+.step-sec > h2 .n { display: inline-flex; align-items: center; justify-content: center; width: 1.8rem; height: 1.8rem; border-radius: 50%; border: 3px solid var(--pipe); font-size: .85rem; font-weight: 700; flex: none; }
+.step-sec > h2 small { font-size: .85rem; font-weight: 400; color: var(--ink-soft); }
+
+.zones { border: 0; padding: 0; margin: 0; display: grid; grid-template-columns: repeat(auto-fit, minmax(min(100%, 11rem), 1fr)); gap: .6rem; }
+.zones legend { font-size: .875rem; color: var(--ink-soft); padding: 0; margin-bottom: .3rem; }
+.zone { position: relative; display: grid; gap: .1rem; padding: .75rem .9rem; border: 1.5px solid var(--line); border-radius: 10px; background: var(--field); cursor: pointer; }
+.zone input { position: absolute; opacity: 0; pointer-events: none; }
+.zone b { font-size: 1rem; }
+.zone span { font-size: .85rem; color: var(--ink-soft); }
+.zone:hover { border-color: var(--pipe); }
+.zone:has(input:checked) { border-color: var(--pipe); box-shadow: inset 0 0 0 1.5px var(--pipe); background: var(--hl); }
+.zone:has(input:focus-visible) { outline: 3px solid var(--pipe); outline-offset: 2px; }
+
+.unit-card { border: 1px solid var(--line); border-radius: 12px; background: var(--card); margin-bottom: 1.25rem; overflow: hidden; }
+.unit-head { display: flex; flex-wrap: wrap; gap: .75rem 1rem; align-items: end; padding: 1rem 1.25rem; border-bottom: 1px solid var(--line); background: var(--hl); }
+.unit-head .field { flex: 1 1 14rem; }
+.unit-head .field.qty { flex: 0 1 10rem; }
+.table-wrap { overflow-x: auto; }
+table { border-collapse: collapse; width: 100%; font-size: .9rem; }
+th, td { text-align: left; padding: .55rem .75rem; border-bottom: 1px solid var(--line); vertical-align: middle; }
+th { font-weight: 600; color: var(--ink-soft); white-space: nowrap; }
+td.num-cell, th.num-cell { text-align: right; }
+tr.group-row td { background: var(--hl); font-weight: 600; font-size: .85rem; padding-top: .45rem; padding-bottom: .45rem; }
+.empty { padding: 1rem .75rem; color: var(--ink-soft); }
+.add-line { display: flex; flex-wrap: wrap; gap: .5rem; padding: .9rem 1.25rem; align-items: center; }
+.add-line select { flex: 1 1 16rem; width: auto; min-width: 0; }
+
+.price { position: sticky; top: 1rem; border: 2px solid var(--pipe); border-radius: 12px; background: var(--card); padding: 1.25rem; }
+.price h2 { margin: 0 0 .25rem; font-size: 1.15rem; }
+.price .sub { margin: 0 0 1rem; color: var(--ink-soft); font-size: .875rem; }
+.build { display: grid; margin: 0; font-variant-numeric: tabular-nums; }
+.build div { display: flex; justify-content: space-between; gap: 1rem; padding: .45rem 0; border-bottom: 1px solid var(--line); font-size: .95rem; }
+.build dt { color: var(--ink-soft); }
+.build dd { margin: 0; text-align: right; }
+.build .strong dt, .build .strong dd { color: var(--ink); font-weight: 700; }
+.build .total { border-bottom: 0; margin-top: .5rem; padding: .75rem; background: var(--pipe); border-radius: 8px; }
+.build .total dt, .build .total dd { color: #000; font-weight: 700; font-size: 1.1rem; }
+.price.is-busy .build { opacity: .55; transition: opacity .2s; }
+.price .note { margin: .75rem 0 0; font-size: .8rem; color: var(--ink-soft); }
+.price .actions { display: grid; gap: .5rem; margin-top: 1.25rem; }
+.done { border: 2px solid var(--pipe); border-radius: 12px; padding: 1.25rem; background: var(--hl); margin-top: 1rem; }
+.done b { font-size: 1.3rem; letter-spacing: .04em; }
+
+footer.built { margin-top: 4rem; padding-top: 1.25rem; border-top: 1px solid var(--line); font-size: .85rem; color: var(--ink-soft); }
+@media (max-width: 900px) { .layout { grid-template-columns: minmax(0, 1fr); } .price { position: static; } }
+</style>
+<link href="https://fonts.googleapis.com/css2?family=Barlow:wght@400;500;600;700&family=Barlow+Condensed:wght@500;600&display=swap" rel="stylesheet">
+<link rel="stylesheet" href="guided.css">
+<style>
+/* quote page in design A: one step at a time, readout always visible */
+.layout { display: block; }
+.price { position: static; max-width: 36rem; }
+.price .actions { display: flex; flex-wrap: wrap; gap: .5rem; }
+.done { border: 2px solid var(--copper); background: var(--copper-soft); border-radius: 14px; padding: 1.25rem; margin-top: 1rem; }
+.done b { font-family: "Barlow Condensed", "Barlow", sans-serif; font-size: 2rem; letter-spacing: .06em; }
+.stepper { grid-template-columns: repeat(3, minmax(0, 1fr)); }
+#discount-sec { margin-bottom: 1.25rem; max-width: 36rem; }
+</style>
+</head>
+<body>
+<header class="topbar">
+  <div class="topbar-in">
+    <img src="../tradex-logo.png" alt="Tradex Trading &amp; Contracting">
+    <span class="who">Air-conditioning supply and installation</span>
+  </div>
+</header>
+<main class="page">
+  <h1>Price your air-conditioning project</h1>
+  <p class="lede">Three short steps: tell us about the project, choose the materials and work for each indoor unit, then see your price and send it to Tradex.</p>
+
+  <p class="msg is-error" id="load-msg" role="alert" hidden></p>
+
+  <div class="layout" id="app" hidden>
+    <div class="readout" id="readout" aria-live="polite"></div>
+    <ol class="stepper" id="stepper" aria-label="Quote steps">
+      <li><button type="button" data-go="1"><span>Step 1</span><b>Project</b></button></li>
+      <li><button type="button" data-go="2"><span>Step 2</span><b>Indoor units</b></button></li>
+      <li><button type="button" data-go="3"><span>Step 3</span><b>Price and send</b></button></li>
+    </ol>
+    <div>
+      <section class="step-sec" aria-labelledby="sec-details" data-step="1">
+        <h2 id="sec-details"><span class="n">1</span>Project details <small>Tell us who you are and where the project is.</small></h2>
+        <form class="panel" id="details" novalidate>
+          <div class="form-grid">
+            <label class="field">Project name <span class="req" aria-hidden="true">*</span><input name="project_name" required maxlength="200" autocomplete="off"></label>
+            <label class="field">Customer<input name="customer" maxlength="200" autocomplete="organization"></label>
+            <label class="field">Phone<input name="contact_phone" type="tel" maxlength="50" autocomplete="tel"></label>
+            <label class="field">Email<input name="contact_email" type="email" maxlength="200" autocomplete="email"></label>
+            <label class="field">Sales person<input name="sales_person" maxlength="200"></label>
+            <label class="field">Project location<input name="location" maxlength="300" placeholder="City, district or site address"></label>
+            <fieldset class="zones wide" id="zones"><legend>Location zone <span class="req" aria-hidden="true">*</span></legend></fieldset>
+          </div>
+        </form>
+      </section>
+
+      <section class="step-sec" aria-labelledby="sec-units" data-step="2">
+        <h2 id="sec-units"><span class="n">2</span>Indoor units <small>For each type of indoor unit, add the materials and work for one unit and how many units you need.</small></h2>
+        <div id="units"></div>
+        <button class="btn" type="button" id="add-unit">Add indoor unit type</button>
+      </section>
+
+      <section class="step-sec" aria-labelledby="sec-price" data-step="3">
+        <h2 id="sec-price">Your price <small>Apply a discount if one was agreed, then send the request.</small></h2>
+        <div class="panel" id="discount-sec">
+          <label class="field" id="discount-label">Discount %<input class="cell-input" id="discount" type="number" min="0" step="0.01" value="0"></label>
+          <p class="msg" id="discount-msg"></p>
+        </div>
+
+    <aside class="price" id="price" aria-live="polite">
+      <h2>Your price</h2>
+      <p class="sub" id="price-sub">Add indoor units to see the price.</p>
+      <dl class="build" id="build"></dl>
+      <p class="msg is-error" id="price-msg"></p>
+      <p class="note">Prices are in Egyptian pounds and are indicative. Tradex confirms the final quote after reviewing the project.</p>
+      <div class="actions">
+        <button class="btn btn-primary" type="button" id="send">Send quote request to Tradex</button>
+        <button class="btn" type="button" id="start-over">Start a new quote</button>
+      </div>
+      <p class="msg" id="send-msg" role="status"></p>
+      <div class="done" id="done" hidden></div>
+    </aside>
+      </section>
+
+      <div class="wizard-nav">
+        <button class="btn btn-lg" type="button" id="step-back">Back</button>
+        <button class="btn btn-primary btn-lg next" type="button" id="step-next">Next</button>
+      </div>
+    </div>
+  </div>
+
+  <footer class="built">Built by Salah Agent for Tradex Trading &amp; Contracting.</footer>
+</main>
+
+<script>
+const SUPABASE_URL = window.TRADEX_DB.url;
+// Publishable key: visitors can only call the public_* functions and submit_quote_request; every table is closed to them.
+const SUPABASE_KEY = window.TRADEX_DB.key;
+const db = supabase.createClient(SUPABASE_URL, SUPABASE_KEY, { auth: { persistSession: false } });
+
+const GROUPS = { installation: "Installation materials", accessories: "Accessories", fittings: "Fittings", subcontractor: "Subcontractor" };
+const DRAFT_KEY = "tradex-quote-draft";
+const state = { items: [], zones: [], units: [], maxDiscount: 0, quote: null, seq: 0 };
+
+const $ = id => document.getElementById(id);
+const el = (tag, cls, text) => { const n = document.createElement(tag); if (cls) n.className = cls; if (text != null) n.textContent = text; return n; };
+const num = v => v == null || v === "" ? 0 : Number(v);
+const fmtAmount = v => num(v).toLocaleString("en-US", { minimumFractionDigits: 2, maximumFractionDigits: 2 });
+const fmtQty = v => num(v).toLocaleString("en-US", { maximumFractionDigits: 3 });
+const fmtPct = v => num(v).toLocaleString("en-US", { maximumFractionDigits: 2 }) + "%";
+const itemById = id => state.items.find(i => i.id === id);
+const OFFLINE = "Can't reach Tradex right now. Check your internet connection and try again in a minute.";
+const explain = error => /failed to fetch|networkerror|load failed/i.test(error.message || "") ? OFFLINE : error.message;
+
+/* ---------- draft kept in this browser so a reload loses nothing ---------- */
+function readDraft() { try { return JSON.parse(localStorage.getItem(DRAFT_KEY) || "null"); } catch { return null; } }
+function saveDraft() {
+  const f = $("details").elements, d = {};
+  for (const k of ["project_name", "customer", "contact_phone", "contact_email", "sales_person", "location"]) d[k] = f[k].value;
+  d.zone = f.zone ? f.zone.value : ""; d.discount = $("discount").value; d.units = state.units;
+  try { localStorage.setItem(DRAFT_KEY, JSON.stringify(d)); } catch {}
+}
+function clearDraft() { try { localStorage.removeItem(DRAFT_KEY); } catch {} }
+
+/* ---------- load the public price list and zones ---------- */
+async function start() {
+  const [items, zones] = await Promise.all([db.rpc("public_price_list"), db.rpc("public_zones")]);
+  const error = items.error || zones.error;
+  if (error) { $("load-msg").hidden = false; $("load-msg").textContent = "The quote page isn't available right now. " + explain(error); return; }
+  state.items = items.data; state.zones = zones.data;
+  const zs = $("zones");
+  for (const z of state.zones) {
+    const lab = el("label", "zone");
+    const inp = el("input"); inp.type = "radio"; inp.name = "zone"; inp.value = z.code;
+    lab.append(inp, el("b", "", z.name), el("span", "", z.description));
+    zs.append(lab);
+  }
+  const d = readDraft();
+  if (d) {
+    const f = $("details").elements;
+    for (const k of ["project_name", "customer", "contact_phone", "contact_email", "sales_person", "location"]) f[k].value = d[k] || "";
+    if (d.zone) { const r = zs.querySelector(`input[value="${CSS.escape(d.zone)}"]`); if (r) r.checked = true; }
+    $("discount").value = d.discount || "0";
+    state.units = (d.units || []).map(u => ({ ...u, lines: (u.lines || []).filter(l => itemById(l.item_id)) }));
+  }
+  if (!state.units.length) addUnit();
+  $("app").hidden = false;
+  renderUnits();
+  requote();
+}
+
+/* ---------- indoor unit cards ---------- */
+function addUnit() { state.units.push({ key: ++state.seq + "-" + Date.now(), name: "Indoor unit " + (state.units.length + 1), quantity: 1, lines: [] }); }
+
+function renderUnits() {
+  const box = $("units"); box.replaceChildren();
+  state.units.forEach((u, ui) => box.append(unitCard(u, ui)));
+}
+
+function unitCard(u, ui) {
+  const card = el("article", "unit-card");
+  const head = el("div", "unit-head");
+  const nameField = el("label", "field", "Indoor unit type");
+  const nameInput = el("input"); nameInput.value = u.name; nameInput.maxLength = 120;
+  nameInput.addEventListener("input", () => { u.name = nameInput.value; saveDraft(); });
+  nameField.append(nameInput);
+  const qtyField = el("label", "field qty", "Number of indoor units");
+  const qtyInput = el("input"); qtyInput.type = "number"; qtyInput.min = "0"; qtyInput.step = "1"; qtyInput.value = u.quantity;
+  qtyInput.addEventListener("input", () => { u.quantity = Math.max(0, num(qtyInput.value)); changed(); });
+  qtyField.append(qtyInput);
+  head.append(nameField, qtyField);
+  if (state.units.length > 1) {
+    const del = el("button", "btn btn-danger", "Remove type"); del.type = "button";
+    del.addEventListener("click", () => { state.units.splice(ui, 1); renderUnits(); changed(); });
+    head.append(del);
+  }
+  card.append(head);
+
+  const wrap = el("div", "table-wrap"); const t = el("table");
+  t.innerHTML = '<thead><tr><th>Item</th><th>Unit</th><th class="num-cell">Qty per indoor unit</th><th><span class="visually-hidden">Actions</span></th></tr></thead>';
+  const body = el("tbody");
+  for (const g of Object.keys(GROUPS)) {
+    const mine = u.lines.map((l, li) => ({ l, li, item: itemById(l.item_id) })).filter(x => x.item && x.item.cost_group === g);
+    if (!mine.length) continue;
+    const gr = el("tr", "group-row"); const gtd = el("td", "", GROUPS[g]); gtd.colSpan = 4; gr.append(gtd); body.append(gr);
+    for (const { l, li, item } of mine) {
+      const tr = el("tr");
+      const nameCell = el("td"); nameCell.append(el("b", "", item.code + " "), document.createTextNode(item.name));
+      const qtyCell = el("td", "num-cell");
+      const q = el("input", "cell-input"); q.type = "number"; q.min = "0"; q.step = "any"; q.value = l.qty; q.setAttribute("aria-label", "Quantity of " + item.name);
+      q.addEventListener("input", () => { l.qty = Math.max(0, num(q.value)); changed(); });
+      qtyCell.append(q);
+      const rm = el("button", "btn btn-link", "Remove"); rm.type = "button"; rm.setAttribute("aria-label", "Remove " + item.name);
+      rm.addEventListener("click", () => { u.lines.splice(li, 1); renderUnits(); changed(); });
+      const act = el("td"); act.append(rm);
+      tr.append(nameCell, el("td", "", item.uom), qtyCell, act);
+      body.append(tr);
+    }
+  }
+  if (!u.lines.length) { const td = el("td", "empty", "Add the materials and work needed for one indoor unit."); td.colSpan = 4; body.append(el("tr")); body.lastChild.append(td); }
+  t.append(body); wrap.append(t); card.append(wrap);
+
+  const add = el("form", "add-line");
+  const sel = el("select"); sel.setAttribute("aria-label", "Item to add");
+  sel.append(new Option("Choose a material or work item", ""));
+  for (const g of Object.keys(GROUPS)) {
+    const og = document.createElement("optgroup"); og.label = GROUPS[g];
+    for (const i of state.items.filter(i => i.cost_group === g)) og.append(new Option(`${i.code}  ${i.name}${i.uom ? "  (per " + i.uom + ")" : ""}`, i.id));
+    if (og.children.length) sel.append(og);
+  }
+  const qty = el("input", "cell-input"); qty.type = "number"; qty.min = "0"; qty.step = "any"; qty.value = "1"; qty.setAttribute("aria-label", "Quantity per indoor unit");
+  const btn = el("button", "btn", "Add item"); btn.type = "submit";
+  add.append(sel, qty, btn);
+  add.addEventListener("submit", ev => {
+    ev.preventDefault();
+    if (!sel.value) { sel.focus(); return; }
+    const existing = u.lines.find(l => l.item_id === sel.value);
+    if (existing) existing.qty = num(existing.qty) + Math.max(0, num(qty.value));
+    else u.lines.push({ item_id: sel.value, qty: Math.max(0, num(qty.value)) });
+    renderUnits(); changed();
+  });
+  card.append(add);
+  return card;
+}
+
+$("add-unit").addEventListener("click", () => { addUnit(); renderUnits(); changed(); });
+
+/* ---------- pricing: always calculated by Tradex's database, never in the browser ---------- */
+function payload() {
+  const f = $("details").elements;
+  return {
+    project_name: f.project_name.value.trim(), customer: f.customer.value.trim(), contact_phone: f.contact_phone.value.trim(),
+    contact_email: f.contact_email.value.trim(), sales_person: f.sales_person.value.trim(), location: f.location.value.trim(),
+    zone: f.zone ? f.zone.value : "", discount_pct: num($("discount").value),
+    units: state.units.map(u => ({ name: u.name.trim() || "Indoor unit", quantity: num(u.quantity), lines: u.lines.map(l => ({ item_id: l.item_id, qty: num(l.qty) })) })),
+  };
+}
+
+let timer, ticket = 0;
+function changed() { saveDraft(); clearTimeout(timer); $("price").classList.add("is-busy"); timer = setTimeout(requote, 350); }
+
+async function requote() {
+  const p = payload(), mine = ++ticket;
+  const units = p.units.reduce((s, u) => s + u.quantity, 0);
+  const hasLines = p.units.some(u => u.quantity > 0 && u.lines.some(l => l.qty > 0));
+  if (!p.zone || !hasLines) {
+    $("price").classList.remove("is-busy"); state.quote = null;
+    renderPrice(null, !p.zone ? "Choose the location zone to see the price." : "Add items to an indoor unit to see the price.");
+    return;
+  }
+  const { data, error } = await db.rpc("public_quote", { p });
+  if (mine !== ticket) return; // a newer change is already being priced
+  $("price").classList.remove("is-busy");
+  if (error) { state.quote = null; renderPrice(null, ""); $("price-msg").textContent = explain(error); return; }
+  state.quote = data;
+  state.maxDiscount = num(data.max_discount_pct);
+  renderPrice(data, fmtQty(units) + " indoor units, " + data.zone_name + " zone");
+}
+
+function renderPrice(q, sub) {
+  $("price-sub").textContent = sub;
+  $("price-msg").textContent = "";
+  const dl = $("build"); dl.replaceChildren();
+  $("send").disabled = !q;
+  if (!q) return;
+  const row = (label, v, cls) => { const d = el("div", cls || ""); d.append(el("dt", "", label), el("dd", "", fmtAmount(v))); dl.append(d); };
+  if (num(q.discount_pct) > 0) {
+    row("Price before discount", q.sales_price);
+    row("Discount " + fmtPct(q.discount_pct), -num(q.discount_amount));
+  }
+  row("Price before VAT", q.net_sales, "strong");
+  row("VAT " + fmtPct(q.vat_pct), q.vat_amount);
+  row("Total price with VAT (EGP)", q.sales_with_vat, "total");
+  $("discount-label").firstChild.textContent = "Discount % (up to " + fmtPct(q.max_discount_pct) + ")";
+  $("discount-sec").hidden = num(q.max_discount_pct) <= 0;
+}
+
+$("details").addEventListener("input", ev => { if (ev.target.name === "zone") changed(); else saveDraft(); });
+$("details").addEventListener("submit", ev => ev.preventDefault());
+$("discount").addEventListener("input", () => {
+  const v = num($("discount").value), m = $("discount-msg");
+  m.className = "msg"; m.textContent = "";
+  if (state.maxDiscount && (v < 0 || v > state.maxDiscount)) { m.className = "msg is-error"; m.textContent = "The discount can be up to " + fmtPct(state.maxDiscount) + "."; }
+  changed();
+});
+
+/* ---------- send the request ---------- */
+$("send").addEventListener("click", async () => {
+  const p = payload(), msg = $("send-msg"), f = $("details").elements;
+  msg.className = "msg is-error";
+  if (!p.project_name) { msg.textContent = "Enter the project name."; f.project_name.focus(); return; }
+  if (!p.contact_phone && !p.contact_email) { msg.textContent = "Enter a phone number or email so Tradex can reply."; f.contact_phone.focus(); return; }
+  if (p.contact_email && !f.contact_email.checkValidity()) { msg.textContent = "Check the email address."; f.contact_email.focus(); return; }
+  $("send").disabled = true; msg.className = "msg"; msg.textContent = "Sending…";
+  const { data, error } = await db.rpc("submit_quote_request", { p });
+  $("send").disabled = false;
+  if (error) { msg.className = "msg is-error"; msg.textContent = "Couldn't send: " + explain(error); return; }
+  msg.textContent = "";
+  const done = $("done"); done.replaceChildren();
+  done.append(el("p", "", "Sent. Your reference is"), el("b", "", data),
+    el("p", "msg", "Tradex will contact you to confirm the final quote. Keep the reference for any follow-up."));
+  done.hidden = false;
+  clearDraft();
+});
+
+$("start-over").addEventListener("click", () => {
+  if (!confirm("Clear this quote and start a new one?")) return;
+  clearDraft(); location.reload();
+});
+
+
+/* ---------- design A: three steps and an always-visible price readout ---------- */
+let currentStep = 1;
+const NEXT_LABEL = { 1: "Next: indoor units", 2: "Next: see your price" };
+function showStep(n) {
+  currentStep = Math.min(3, Math.max(1, n));
+  document.querySelectorAll("#app [data-step]").forEach(s => {
+    const on = Number(s.dataset.step) === currentStep;
+    s.hidden = !on;
+    if (on) { s.classList.remove("is-entering"); void s.offsetWidth; s.classList.add("is-entering"); }
+  });
+  document.querySelectorAll("#stepper button").forEach(b => {
+    const k = Number(b.dataset.go);
+    b.classList.toggle("is-done", k < currentStep);
+    if (k === currentStep) b.setAttribute("aria-current", "step"); else b.removeAttribute("aria-current");
+  });
+  $("step-back").disabled = currentStep === 1;
+  $("step-next").hidden = currentStep === 3;
+  $("step-next").textContent = NEXT_LABEL[currentStep] || "";
+}
+function go(n) { showStep(n); $("app").scrollIntoView({ behavior: "smooth", block: "start" }); }
+$("stepper").addEventListener("click", ev => { const b = ev.target.closest("button[data-go]"); if (b) go(Number(b.dataset.go)); });
+$("step-back").addEventListener("click", () => go(currentStep - 1));
+$("step-next").addEventListener("click", () => {
+  const f = $("details").elements;
+  if (currentStep === 1 && !f.project_name.value.trim()) { f.project_name.focus(); f.project_name.setCustomValidity("Enter the project name."); f.project_name.reportValidity(); f.project_name.setCustomValidity(""); return; }
+  if (currentStep === 1 && !(f.zone && f.zone.value)) { $("zones").querySelector("input").focus(); say("Choose the location zone."); return; }
+  go(currentStep + 1);
+});
+function say(text) { const m = $("price-msg"); m.textContent = text; }
+
+function updateReadout(q, sub) {
+  const r = $("readout"); r.replaceChildren();
+  const cell = (label, value, cls) => { const d = el("div", cls || ""); d.append(el("span", "", label), el("b", "", value)); r.append(d); };
+  if (!q) { cell("Your price", "Not ready yet", "big"); const d = el("div"); d.append(el("span", "", sub || "")); r.append(d); return; }
+  cell("Total price with VAT", fmtAmount(q.sales_with_vat) + " EGP", "big");
+  cell("Before VAT", fmtAmount(q.net_sales));
+  cell("Indoor units", fmtQty(q.units));
+}
+const renderPriceBase = renderPrice;
+renderPrice = (q, sub) => { renderPriceBase(q, sub); updateReadout(q, sub); };
+showStep(1);
+start();
+</script>
+</body>
+</html>

@@ -45,6 +45,12 @@ Database (`public` schema). Each migration applied to Supabase is mirrored as `s
 
 The diagram in `drawSchematic()` is generated from the data: non-loop steps are spaced along the straight pipe and loop-phase steps are spread around the circle.
 
+### Design versions (`designs/`)
+
+The live pages above are tagged `v1` in git. `designs/a/` ("Guided": top bar, step-by-step wizard, dark price readout, cooling blue and copper, Barlow) and `designs/b/` ("Workspace": dark sidebar, master-detail estimator with Alt+1/2/3 section tabs and Enter-to-next-cell, dense tables, Source Sans 3) each hold `flow.html`, `estimate.html` and `quote.html`. They are copies of the live pages with the same JS; each keeps the original inline `<style>` and layers its design on top (`a/guided.css`, `b/workspace.css`, plus a small page `<style>`), and wraps base functions (`renderSummary`, `renderPrice`, `openEstimate`, `showTab`, `renderEditor`) instead of rewriting them. Fixes to page logic must be made in the live page and in both copies.
+
+Both designs use a **sandbox** Supabase project, not the live data: `designs/config.js` points them at project ref `qgyminfoernzixjtjaoe` (the org's default project, eu-west-1). It has the same schema (the same migration files applied in order), the seed flow, the sample `SMP-` price list and its own `editors` and auth users. Schema changes must be applied to both projects. Vercel: `/a` and `/b` redirect to each design's estimator.
+
 Two older static copies no longer track the data: the Claude Design canvas https://claude.ai/artifact/3S4691ZojzG8JNMHuZkaj6 and the dashboard https://claude.ai/artifact/68ruvgkjzP7YtsybZaFnwj.
 
 ## Environment
@@ -52,4 +58,5 @@ Two older static copies no longer track the data: the Claude Design canvas https
 - Windows 10. PowerShell is the primary shell.
 - `python3` is not runnable, so the odoo-tools MCP server cannot start and the scheduler guide's `which python3` step fails.
 - `gh` is logged in as `Salah63-AI` (repos `live-artifact`, `Personal-Portfolio`).
-- Supabase is reachable through the connector, not the CLI (which isn't installed). The org "Tradex" also has an unused default project, which is paused.
+- Supabase is reachable through the connector, not the CLI (which isn't installed). The org "Tradex" has two projects: live artifact (live data) and the default project, now the design sandbox. Free projects pause when idle; restore before use.
+- Local preview: `.claude/launch.json` serves the folder with `python -m http.server 3000` (port 3000 matches the Supabase Site URL); open pages by file path, e.g. `/designs/a/estimate.html`.
