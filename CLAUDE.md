@@ -59,4 +59,5 @@ Two older static copies no longer track the data: the Claude Design canvas https
 - `python3` is not runnable, so the odoo-tools MCP server cannot start and the scheduler guide's `which python3` step fails.
 - `gh` is logged in as `Salah63-AI` (repos `live-artifact`, `Personal-Portfolio`).
 - Supabase is reachable through the connector, not the CLI (which isn't installed). The org "Tradex" has two projects: live artifact (live data) and the default project, now the design sandbox. Free projects pause when idle; restore before use.
+- Hosting: Vercel project `live-artifact` in team "salah ahmed", auto-deployed from `main`. Public address `https://live-artifact-salah-ahmed.vercel.app` (`/` flow, `/estimate`, `/quote`); Vercel Authentication is off so anyone can load the pages. The Vercel connector can list the project but gets 404 on project reads and writes, so project settings are changed by the user in the Vercel dashboard.
 - Local preview: `.claude/launch.json` serves the folder with `python -m http.server 3000` (port 3000 matches the Supabase Site URL); open pages by file path, e.g. `/designs/a/estimate.html`.
