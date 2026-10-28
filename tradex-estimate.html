@@ -157,9 +157,45 @@ tfoot td { font-weight: 600; border-top: 1px solid var(--line); border-bottom: 0
 .tag.same { color: var(--ink-soft); }
 .status-final { color: var(--teal-text); font-weight: 600; }
 
-/* Estimate editor */
+.kind.group-installation { color: var(--material); }
+.kind.group-accessories { color: #6E5BA6; }
+.kind.group-fittings { color: var(--teal-text); }
+
+/* Estimate workspace */
 .editor { margin-top: 2.5rem; padding-top: 2rem; border-top: 3px solid var(--pipe); }
-.editor-grid { display: grid; grid-template-columns: minmax(0, 1fr) 21rem; gap: 1.5rem; align-items: start; }
+.editor-head { display: flex; flex-wrap: wrap; align-items: flex-end; gap: .75rem 1.5rem; margin: 0 0 1.5rem; }
+.editor-head h2 { margin: 0; font-family: "Archivo", Calibri, system-ui, sans-serif; font-stretch: 112%; font-weight: 400; font-size: 1.9rem; line-height: 1.15; }
+.editor-head .meta { color: var(--ink-soft); font-size: .95rem; margin: .25rem 0 0; }
+.editor-head .push { margin-left: auto; display: flex; flex-wrap: wrap; gap: .5rem; }
+.stats { display: flex; flex-wrap: wrap; gap: .5rem 2rem; margin: 0 0 1.75rem; padding: 0; list-style: none; }
+.stats li { display: grid; }
+.stats span { font-size: .8rem; color: var(--ink-soft); }
+.stats b { font-size: 1.35rem; font-variant-numeric: tabular-nums; font-weight: 600; }
+.editor-grid { display: grid; grid-template-columns: minmax(0, 1fr) 22rem; gap: 1.75rem; align-items: start; }
+.step-sec { margin: 0 0 2rem; }
+.step-sec > h3 { display: flex; align-items: baseline; gap: .6rem; margin: 0 0 .9rem; font-size: 1.2rem; font-weight: 600; }
+.step-sec > h3 .n { display: inline-flex; align-items: center; justify-content: center; width: 1.8rem; height: 1.8rem; border-radius: 50%;
+  border: 3px solid var(--pipe); font-size: .85rem; font-weight: 700; flex: none; }
+.step-sec > h3 small { font-size: .85rem; font-weight: 400; color: var(--ink-soft); }
+.save-state { font-size: .85rem; color: var(--ink-soft); min-height: 1.25rem; margin: .5rem 0 0; }
+.save-state.is-error { color: var(--bad); }
+
+/* Zone choice */
+.zones { border: 0; padding: 0; margin: 0; display: grid; grid-template-columns: repeat(auto-fit, minmax(min(100%, 11rem), 1fr)); gap: .6rem; }
+.zones legend { font-size: .875rem; color: var(--ink-soft); padding: 0; margin-bottom: .3rem; }
+.zone { position: relative; display: grid; gap: .1rem; padding: .75rem .9rem; border: 1.5px solid var(--line); border-radius: 10px; background: var(--field); cursor: pointer; }
+.zone input { position: absolute; opacity: 0; pointer-events: none; }
+.zone b { font-size: 1rem; }
+.zone span { font-size: .85rem; color: var(--ink-soft); }
+.zone em { font-style: normal; font-weight: 700; font-variant-numeric: tabular-nums; color: var(--teal-text); }
+.zone:hover { border-color: var(--pipe); }
+.zone:has(input:checked) { border-color: var(--pipe); box-shadow: inset 0 0 0 1.5px var(--pipe); background: var(--hl); }
+.zone:has(input:focus-visible) { outline: 3px solid var(--pipe); outline-offset: 2px; }
+
+/* Line groups inside a unit card */
+tr.group-row td { background: var(--hl); font-weight: 600; font-size: .85rem; padding-top: .45rem; padding-bottom: .45rem; }
+tr.group-row td.num-cell { color: var(--ink); }
+.margin-low { color: var(--bad) !important; }
 .unit-card { border: 1px solid var(--line); border-radius: 12px; background: var(--card); margin-bottom: 1.25rem; overflow: hidden; }
 .unit-head { display: flex; flex-wrap: wrap; gap: .75rem 1rem; align-items: end; padding: 1rem 1.25rem; border-bottom: 1px solid var(--line); background: var(--hl); }
 .unit-head .field { flex: 1 1 14rem; }
@@ -185,6 +221,13 @@ tfoot td { font-weight: 600; border-top: 1px solid var(--line); border-bottom: 0
 .build .strong dt, .build .strong dd { color: var(--ink); font-weight: 700; }
 .build .price { border-bottom: 0; margin-top: .5rem; padding: .7rem .75rem; background: var(--pipe); border-radius: 8px; }
 .build .price dt, .build .price dd { color: #000; font-weight: 700; font-size: 1.05rem; }
+.build .gap { margin-top: .9rem; }
+.build .indent dt { padding-left: .9rem; }
+.margin-box { display: grid; grid-template-columns: 1fr 1fr; gap: .5rem; margin-top: .9rem; }
+.margin-box div { display: grid; padding: .6rem .75rem; border: 1px solid var(--line); border-radius: 8px; }
+.margin-box span { font-size: .8rem; color: var(--ink-soft); }
+.margin-box b { font-size: 1.15rem; font-variant-numeric: tabular-nums; }
+.summary .note { margin: .75rem 0 0; font-size: .8rem; color: var(--ink-soft); }
 .summary .actions { display: grid; gap: .5rem; margin-top: 1.25rem; }
 
 footer.built { margin-top: 4rem; padding-top: 1.25rem; border-top: 1px solid var(--line); font-size: .85rem; color: var(--ink-soft); display: flex; flex-wrap: wrap; justify-content: space-between; gap: .5rem; }
@@ -207,8 +250,8 @@ footer.built { margin-top: 4rem; padding-top: 1.25rem; border-top: 1px solid var
   </header>
 
   <h1>Project cost estimate</h1>
-  <p class="lede">Build the cost of one indoor unit from the price list, multiply by the number of units, then add overhead and indirect cost and price it for the margin.
-    <span class="formula">Unit cost = (material + subcontractor) &times; (1 + 15% + 35%). Sales price = project cost &divide; (1 &minus; 20%).</span></p>
+  <p class="lede">Build the cost of one indoor unit from the price list, set the number of units and the project's location zone, then add overhead, indirect cost and marketing and price it for the margin.
+    <span class="formula">Direct = (material + subcontractor) &times; zone %. Total cost = direct + 15% + 25% + marketing. Sales price = total cost &divide; 0.8, less discount, plus 14% VAT.</span></p>
 
   <section class="auth" id="auth" hidden>
     <h2 id="auth-title">Sign in</h2>
@@ -248,40 +291,73 @@ footer.built { margin-top: 4rem; padding-top: 1.25rem; border-top: 1px solid var
     <section id="view-estimates" role="tabpanel" aria-labelledby="tab-estimates">
       <div class="subhead"><h2>Estimates</h2><div class="push"><button class="btn btn-primary" type="button" id="new-estimate">New estimate</button></div></div>
       <div id="new-estimate-slot"></div>
+      <div class="toolbar">
+        <label class="visually-hidden" for="est-search">Search estimates</label>
+        <input type="search" id="est-search" placeholder="Search project, customer or sales person">
+        <label class="visually-hidden" for="est-status">Status</label>
+        <select id="est-status"><option value="">All statuses</option><option value="draft">Draft</option><option value="final">Final</option></select>
+      </div>
       <div class="table-wrap"><table>
         <thead><tr>
-          <th>Estimate</th><th>Project</th><th class="num-cell">Units</th><th class="num-cell">Project cost</th>
-          <th class="num-cell">Sales price</th><th class="num-cell">Margin</th><th>Status</th><th><span class="visually-hidden">Actions</span></th>
+          <th>Project</th><th>Customer</th><th>Sales person</th><th>Zone</th><th class="num-cell">Indoor units</th>
+          <th class="num-cell">Total cost</th><th class="num-cell">Net price</th><th class="num-cell">Margin</th><th>Status</th><th><span class="visually-hidden">Actions</span></th>
         </tr></thead>
         <tbody id="estimates-body"></tbody>
       </table></div>
 
       <section class="editor" id="editor" hidden>
-        <div class="subhead"><h2 id="editor-title">Estimate</h2>
+        <div class="editor-head">
+          <div>
+            <h2 id="editor-title">Estimate</h2>
+            <p class="meta" id="editor-meta"></p>
+          </div>
           <div class="push">
             <button class="btn" type="button" id="refresh-prices">Refresh prices from price list</button>
             <button class="btn" type="button" id="export-xlsx">Export to Excel</button>
             <button class="btn btn-danger" type="button" id="delete-estimate">Delete estimate</button>
           </div>
         </div>
-        <form class="panel" id="estimate-form">
-          <div class="form-grid">
-            <label class="field">Estimate name<input name="name" required></label>
-            <label class="field">Project (optional)<select name="project_id"></select></label>
-            <label class="field">Customer<input name="customer"></label>
-            <label class="field">Status<select name="status"><option value="draft">Draft</option><option value="final">Final</option></select></label>
-            <label class="field">Overhead % of direct cost<input name="overhead_pct" type="number" min="0" step="0.01" required></label>
-            <label class="field">Indirect % of direct cost<input name="indirect_pct" type="number" min="0" step="0.01" required></label>
-            <label class="field">Margin % of sales price<input name="margin_pct" type="number" min="0" max="99.99" step="0.01" required></label>
-            <label class="field wide">Notes<textarea name="notes"></textarea></label>
-          </div>
-          <div class="form-actions"><button class="btn btn-primary" type="submit">Save estimate details</button></div>
-        </form>
+        <ul class="stats" id="stats" aria-label="Estimate at a glance"></ul>
 
         <div class="editor-grid">
           <div>
-            <div id="units"></div>
-            <button class="btn" type="button" id="add-unit">Add indoor unit type</button>
+            <section class="step-sec" aria-labelledby="sec-details">
+              <h3 id="sec-details"><span class="n">1</span>Project details</h3>
+              <form class="panel" id="details-form">
+                <div class="form-grid">
+                  <label class="field">Project name<input name="name" required data-key="f-name"></label>
+                  <label class="field">Customer<input name="customer" data-key="f-customer"></label>
+                  <label class="field">Sales person<input name="sales_person" data-key="f-sales"></label>
+                  <label class="field">Project location<input name="location" placeholder="City, district or site address" data-key="f-location"></label>
+                  <fieldset class="zones wide" id="zones"><legend>Location zone (multiplies material and subcontractor cost)</legend></fieldset>
+                  <label class="field">Tracked project (optional)<select name="project_id" data-key="f-project"></select></label>
+                  <label class="field">Status<select name="status" data-key="f-status"><option value="draft">Draft</option><option value="final">Final</option></select></label>
+                  <label class="field wide">Notes<textarea name="notes" data-key="f-notes"></textarea></label>
+                </div>
+                <p class="save-state" id="details-state" role="status"></p>
+              </form>
+            </section>
+
+            <section class="step-sec" aria-labelledby="sec-units">
+              <h3 id="sec-units"><span class="n">2</span>Indoor units <small>cost of one unit, at central prices</small></h3>
+              <div id="units"></div>
+              <button class="btn" type="button" id="add-unit">Add indoor unit type</button>
+            </section>
+
+            <section class="step-sec" aria-labelledby="sec-rates">
+              <h3 id="sec-rates"><span class="n">3</span>Rates and pricing</h3>
+              <form class="panel" id="rates-form">
+                <div class="form-grid">
+                  <label class="field">Overhead % of direct cost<input name="overhead_pct" type="number" min="0" step="0.01" required data-key="f-oh"></label>
+                  <label class="field">Indirect % of direct cost<input name="indirect_pct" type="number" min="0" step="0.01" required data-key="f-ind"></label>
+                  <label class="field">Marketing expense (EGP)<input name="marketing_amount" type="number" min="0" step="0.01" required data-key="f-mkt"></label>
+                  <label class="field">Target margin % (sales price = cost &divide; (1 &minus; margin))<input name="margin_pct" type="number" min="0" max="99.99" step="0.01" required data-key="f-margin"></label>
+                  <label class="field">Discount % of sales price<input name="discount_pct" type="number" min="0" max="99.99" step="0.01" required data-key="f-disc"></label>
+                  <label class="field">VAT %<input name="vat_pct" type="number" min="0" step="0.01" required data-key="f-vat"></label>
+                </div>
+                <p class="save-state" id="rates-state" role="status"></p>
+              </form>
+            </section>
           </div>
           <aside class="summary" id="summary" aria-live="polite"></aside>
         </div>
@@ -304,11 +380,11 @@ footer.built { margin-top: 4rem; padding-top: 1.25rem; border-top: 1px solid var
         <label class="visually-hidden" for="item-search">Search items</label>
         <input type="search" id="item-search" placeholder="Search code or name">
         <label class="visually-hidden" for="item-kind">Kind</label>
-        <select id="item-kind"><option value="">All kinds</option><option value="material">Material</option><option value="subcontractor">Subcontractor</option></select>
+        <select id="item-kind"><option value="">All groups</option><option value="installation">Installation materials</option><option value="accessories">Accessories</option><option value="fittings">Fittings</option><option value="subcontractor">Subcontractor</option></select>
         <label class="check"><input type="checkbox" id="item-inactive"> Show inactive</label>
       </div>
       <div class="table-wrap"><table>
-        <thead><tr><th>Code</th><th>Item</th><th>Kind</th><th>Unit</th><th class="num-cell">Price</th><th>Status</th><th><span class="visually-hidden">Actions</span></th></tr></thead>
+        <thead><tr><th>Code</th><th>Item</th><th>Group</th><th>Unit</th><th class="num-cell">Price</th><th>Status</th><th><span class="visually-hidden">Actions</span></th></tr></thead>
         <tbody id="items-body"></tbody>
       </table></div>
     </section>
@@ -325,7 +401,11 @@ const SUPABASE_KEY = "sb_publishable_3175UwVo8mK1RC66KiTKtA_1xBLr-yB";
 const db = supabase.createClient(SUPABASE_URL, SUPABASE_KEY);
 
 const KINDS = { material: "Material", subcontractor: "Subcontractor" };
-const state = { user: null, items: [], projects: [], estimates: [], estId: null, est: null, units: [], unitSums: [], editingItem: undefined, importRows: null };
+// cost groups in build-up order; material items carry material_group, subcontractor items don't
+const GROUPS = { installation: "Installation materials", accessories: "Accessories", fittings: "Fittings", subcontractor: "Subcontractor" };
+const MATERIAL_GROUPS = ["installation", "accessories", "fittings"];
+const groupOf = item => item.kind === "subcontractor" ? "subcontractor" : item.material_group || "installation";
+const state = { user: null, items: [], projects: [], zones: [], estimates: [], estId: null, est: null, units: [], unitSums: [], editingItem: undefined, importRows: null };
 
 const $ = id => document.getElementById(id);
 const el = (tag, cls, text) => { const n = document.createElement(tag); if (cls) n.className = cls; if (text != null) n.textContent = text; return n; };
@@ -356,7 +436,7 @@ function explain(error) {
   if (error.code === "42501") return "This account isn't allowed to change that.";
   if (error.code === "23505") return "That code is already in the price list.";
   if (error.code === "23503") return "It's used in an estimate, so it can't be deleted. Mark it inactive instead.";
-  if (error.code === "23514") return "One of the values is out of range. Amounts can't be negative and margin must be under 100%.";
+  if (error.code === "23514") return "One of the values is out of range. Amounts can't be negative, margin and discount must be under 100%, and material items need a group.";
   return error.message;
 }
 async function run(promise, okText) {
@@ -492,8 +572,14 @@ async function onSession(session) {
     return;
   }
   $("app").hidden = false;
-  await Promise.all([loadItems(), loadProjects(), loadEstimates()]);
+  await Promise.all([loadItems(), loadProjects(), loadZones(), loadEstimates()]);
 }
+
+async function loadZones() {
+  const data = await run(db.from("location_zones").select("*").order("position"));
+  if (data) state.zones = data;
+}
+const zoneByCode = code => state.zones.find(z => z.code === code) || { code, name: code, description: "", factor_pct: 100 };
 
 /* ---------- tabs ---------- */
 function showTab(name) {
@@ -516,8 +602,8 @@ async function loadItems() {
 
 function renderItems() {
   const q = $("item-search").value.trim().toLowerCase();
-  const kind = $("item-kind").value, showInactive = $("item-inactive").checked;
-  const rows = state.items.filter(i => (showInactive || i.active) && (!kind || i.kind === kind)
+  const group = $("item-kind").value, showInactive = $("item-inactive").checked;
+  const rows = state.items.filter(i => (showInactive || i.active) && (!group || groupOf(i) === group)
     && (!q || i.code.toLowerCase().includes(q) || i.name.toLowerCase().includes(q)));
   const body = $("items-body"); body.replaceChildren();
   if (!rows.length) {
@@ -526,13 +612,17 @@ function renderItems() {
   }
   for (const i of rows) {
     const tr = el("tr", i.active ? "" : "is-muted");
-    const kindCell = el("td"); kindCell.append(el("span", "kind " + i.kind, KINDS[i.kind]));
+    const kindCell = el("td"); kindCell.append(groupTag(i));
     tr.append(el("td", "", i.code), el("td", "", i.name), kindCell, el("td", "", i.uom),
       el("td", "num-cell", fmtMoney(i.unit_price)), el("td", "", i.active ? "Active" : "Inactive"));
     const act = el("td"); const edit = el("button", "btn btn-link", "Edit"); edit.type = "button";
     edit.addEventListener("click", () => showItemForm(i));
     act.append(edit); tr.append(act); body.append(tr);
   }
+}
+function groupTag(item) {
+  const g = groupOf(item);
+  return el("span", "kind " + (g === "subcontractor" ? "subcontractor" : "group-" + g), GROUPS[g]);
 }
 $("item-search").addEventListener("input", renderItems);
 $("item-kind").addEventListener("change", renderItems);
@@ -548,13 +638,18 @@ function showItemForm(item) {
     <label class="field">Code<input name="code" required></label>
     <label class="field">Item name<input name="name" required></label>
     <label class="field">Kind<select name="kind"><option value="material">Material</option><option value="subcontractor">Subcontractor</option></select></label>
+    <label class="field" data-group>Material group<select name="material_group"><option value="installation">Installation materials</option><option value="accessories">Accessories</option><option value="fittings">Fittings</option></select></label>
     <label class="field">Unit of measure<input name="uom" placeholder="m, pc, unit, lot"></label>
     <label class="field">Price (EGP)<input name="unit_price" type="number" min="0" step="0.01" required></label>
     <label class="field">Status<select name="active"><option value="true">Active</option><option value="false">Inactive</option></select></label>`;
   form.append(grid);
-  const v = item || { code: "", name: "", kind: "material", uom: "", unit_price: "", active: true };
+  const v = item || { code: "", name: "", kind: "material", material_group: "installation", uom: "", unit_price: "", active: true };
   for (const k of ["code", "name", "kind", "uom", "unit_price"]) form.elements[k].value = v[k];
+  form.elements.material_group.value = v.material_group || "installation";
   form.elements.active.value = String(v.active);
+  const groupField = grid.querySelector("[data-group]");
+  const syncGroup = () => { groupField.hidden = form.elements.kind.value !== "material"; };
+  form.elements.kind.addEventListener("change", syncGroup); syncGroup();
   const actions = el("div", "form-actions");
   const save = el("button", "btn btn-primary", item ? "Save item" : "Add item"); save.type = "submit";
   const cancel = el("button", "btn", "Cancel"); cancel.type = "button"; cancel.addEventListener("click", () => slot.replaceChildren());
@@ -572,6 +667,7 @@ function showItemForm(item) {
     e.preventDefault();
     const f = form.elements;
     const row = { code: f.code.value.trim(), name: f.name.value.trim(), kind: f.kind.value, uom: f.uom.value.trim(),
+      material_group: f.kind.value === "material" ? f.material_group.value : null,
       unit_price: num(f.unit_price.value), active: f.active.value === "true" };
     save.disabled = true;
     const ok = item ? await run(db.from("cost_items").update(row).eq("id", item.id), "Item saved.")
@@ -587,7 +683,8 @@ function showItemForm(item) {
 const HEADER_ALIASES = {
   code: "code", item_code: "code", sku: "code",
   name: "name", item: "name", item_name: "name", description: "name",
-  kind: "kind", type: "kind", category: "kind",
+  kind: "kind", type: "kind",
+  group: "material_group", material_group: "material_group", category: "material_group",
   uom: "uom", unit: "uom", unit_of_measure: "uom",
   unit_price: "unit_price", price: "unit_price", cost: "unit_price", unit_cost: "unit_price",
 };
@@ -597,9 +694,16 @@ function parseKind(v) {
   if (["subcontractor", "subcontract", "sub", "s", "subcontractors"].includes(s)) return "subcontractor";
   return null;
 }
+function parseGroup(v) {
+  const s = String(v).trim().toLowerCase();
+  if (s.startsWith("install")) return "installation";
+  if (s.startsWith("access")) return "accessories";
+  if (s.startsWith("fitting")) return "fittings";
+  return null;
+}
 
 $("download-template").addEventListener("click", () => {
-  const blob = new Blob(["code,name,kind,uom,unit_price\n"], { type: "text/csv" });
+  const blob = new Blob(["code,name,kind,group,uom,unit_price\nCU-0635,Copper pipe 6.35 mm,material,installation,m,0\nLB-WALL,Wall unit installation,subcontractor,,unit,0\n"], { type: "text/csv" });
   const a = el("a"); a.href = URL.createObjectURL(blob); a.download = "price-list-template.csv"; a.click();
   setTimeout(() => URL.revokeObjectURL(a.href), 1000);
 });
@@ -619,10 +723,12 @@ $("import-file").addEventListener("change", async e => {
     for (const k in raw) { const key = HEADER_ALIASES[k.trim().toLowerCase().replace(/[\s-]+/g, "_")]; if (key) r[key] = raw[k]; }
     const out = { line: n + 2, code: String(r.code ?? "").trim(), name: String(r.name ?? "").trim(), kind: parseKind(r.kind ?? ""),
       uom: String(r.uom ?? "").trim(), unit_price: Number(String(r.unit_price ?? "").replace(/[, ]/g, "")) };
+    out.material_group = out.kind === "material" ? parseGroup(r.material_group ?? "") : null;
     const problems = [];
     if (!out.code) problems.push("no code");
     if (!out.name) problems.push("no name");
     if (!out.kind) problems.push("kind must be material or subcontractor");
+    if (out.kind === "material" && !out.material_group) problems.push("group must be installation, accessories or fittings");
     if (String(r.unit_price ?? "").trim() === "" || !isFinite(out.unit_price) || out.unit_price < 0) problems.push("price must be a number, 0 or more");
     if (out.code && seen.has(out.code.toLowerCase())) problems.push("code repeated in the file");
     if (out.code) seen.add(out.code.toLowerCase());
@@ -630,7 +736,7 @@ $("import-file").addEventListener("change", async e => {
     const old = byCode.get(out.code.toLowerCase());
     if (!old) return { ...out, status: "new" };
     out.code = old.code;
-    const same = old.name === out.name && old.kind === out.kind && old.uom === out.uom && num(old.unit_price) === out.unit_price && old.active;
+    const same = old.name === out.name && old.kind === out.kind && old.material_group === out.material_group && old.uom === out.uom && num(old.unit_price) === out.unit_price && old.active;
     return { ...out, status: same ? "same" : "update", why: same ? "" : "was " + fmtMoney(old.unit_price) };
   });
   renderImport(file.name);
@@ -644,11 +750,11 @@ function renderImport(fileName) {
   panel.append(el("h3", "", "Import preview: " + fileName));
   panel.append(el("p", "msg", `${count("new")} new, ${count("update")} updated, ${count("same")} unchanged, ${count("reject")} rejected. Rejected rows are skipped.`));
   const wrap = el("div", "table-wrap"); const t = el("table");
-  t.innerHTML = '<thead><tr><th>Row</th><th>Result</th><th>Code</th><th>Item</th><th>Kind</th><th>Unit</th><th class="num-cell">Price</th><th>Note</th></tr></thead>';
+  t.innerHTML = '<thead><tr><th>Row</th><th>Result</th><th>Code</th><th>Item</th><th>Group</th><th>Unit</th><th class="num-cell">Price</th><th>Note</th></tr></thead>';
   const body = el("tbody");
   for (const r of rows) {
     const tr = el("tr"); const res = el("td"); res.append(el("span", "tag " + r.status, { new: "New", update: "Update", same: "Unchanged", reject: "Rejected" }[r.status]));
-    tr.append(el("td", "", r.line), res, el("td", "", r.code), el("td", "", r.name), el("td", "", r.kind ? KINDS[r.kind] : ""),
+    tr.append(el("td", "", r.line), res, el("td", "", r.code), el("td", "", r.name), el("td", "", r.kind ? GROUPS[groupOf(r)] : ""),
       el("td", "", r.uom), el("td", "num-cell", isFinite(r.unit_price) ? fmtAmount(r.unit_price) : ""), el("td", "", r.why || ""));
     body.append(tr);
   }
@@ -660,7 +766,7 @@ function renderImport(fileName) {
   cancel.addEventListener("click", () => { state.importRows = null; slot.replaceChildren(); });
   go.addEventListener("click", async () => {
     const payload = rows.filter(r => r.status === "new" || r.status === "update")
-      .map(r => ({ code: r.code, name: r.name, kind: r.kind, uom: r.uom, unit_price: r.unit_price, active: true }));
+      .map(r => ({ code: r.code, name: r.name, kind: r.kind, material_group: r.material_group, uom: r.uom, unit_price: r.unit_price, active: true }));
     go.disabled = true;
     if (await run(db.from("cost_items").upsert(payload, { onConflict: "code" }), payload.length + " items imported.")) {
       state.importRows = null; slot.replaceChildren(); loadItems();
@@ -691,21 +797,27 @@ async function loadEstimates() {
 
 function renderEstimates() {
   const body = $("estimates-body"); body.replaceChildren();
-  if (!state.estimates.length) {
-    const td = el("td", "empty", "No estimates yet. Start with New estimate."); td.colSpan = 8;
+  const q = $("est-search").value.trim().toLowerCase(), st = $("est-status").value;
+  const rows = state.estimates.filter(e => (!st || e.status === st)
+    && (!q || [e.name, e.customer, e.sales_person].some(v => (v || "").toLowerCase().includes(q))));
+  if (!rows.length) {
+    const td = el("td", "empty", state.estimates.length ? "No estimates match." : "No estimates yet. Start with New estimate."); td.colSpan = 10;
     body.append(el("tr")); body.lastChild.append(td); return;
   }
-  for (const e of state.estimates) {
+  for (const e of rows) {
     const tr = el("tr", e.id === state.estId ? "is-selected" : "");
     const status = el("td", e.status === "final" ? "status-final" : "", e.status === "final" ? "Final" : "Draft");
-    tr.append(el("td", "", e.name), el("td", "", e.project_name || ""), el("td", "num-cell", fmtQty(e.units)),
-      el("td", "num-cell", fmtMoney(e.project_cost)), el("td", "num-cell", fmtMoney(e.sales_price)),
-      el("td", "num-cell", fmtMoney(e.margin_amount)), status);
+    const margin = el("td", "num-cell" + (num(e.margin_pct_actual) < num(e.margin_pct) ? " margin-low" : ""), e.margin_pct_actual == null ? "" : fmtPct(e.margin_pct_actual));
+    tr.append(el("td", "", e.name), el("td", "", e.customer), el("td", "", e.sales_person), el("td", "", e.zone_name + " " + fmtPct(e.zone_factor_pct)),
+      el("td", "num-cell", fmtQty(e.units)), el("td", "num-cell", fmtMoney(e.total_cost)), el("td", "num-cell", fmtMoney(e.net_sales)), margin, status);
     const act = el("td"); const open = el("button", "btn btn-link", "Open"); open.type = "button";
+    open.setAttribute("aria-label", "Open " + e.name);
     open.addEventListener("click", () => openEstimate(e.id));
     act.append(open); tr.append(act); body.append(tr);
   }
 }
+$("est-search").addEventListener("input", renderEstimates);
+$("est-status").addEventListener("change", renderEstimates);
 
 $("new-estimate").addEventListener("click", () => {
   const slot = $("new-estimate-slot"); slot.replaceChildren();
@@ -713,17 +825,11 @@ $("new-estimate").addEventListener("click", () => {
   form.append(el("h3", "", "New estimate"));
   const grid = el("div", "form-grid");
   grid.innerHTML = `
-    <label class="field">Estimate name<input name="name" required placeholder="e.g. Villa 12 VRF"></label>
-    <label class="field">Project (optional)<select name="project_id"></select></label>
+    <label class="field">Project name<input name="name" required placeholder="e.g. Villa 12, New Cairo"></label>
     <label class="field">Customer<input name="customer"></label>
     <label class="field">First indoor unit type<input name="unit_name" value="Indoor unit"></label>
-    <label class="field">Number of units<input name="quantity" type="number" min="0" step="1" value="1" required></label>`;
+    <label class="field">Number of indoor units<input name="quantity" type="number" min="0" step="1" value="1" required></label>`;
   form.append(grid);
-  fillProjectSelect(form.elements.project_id, "");
-  form.elements.project_id.addEventListener("change", () => {
-    const p = state.projects.find(x => x.id === form.elements.project_id.value);
-    if (p && !form.elements.customer.value) form.elements.customer.value = p.customer;
-  });
   const actions = el("div", "form-actions");
   const save = el("button", "btn btn-primary", "Create estimate"); save.type = "submit";
   const cancel = el("button", "btn", "Cancel"); cancel.type = "button"; cancel.addEventListener("click", () => slot.replaceChildren());
@@ -731,8 +837,7 @@ $("new-estimate").addEventListener("click", () => {
   form.addEventListener("submit", async ev => {
     ev.preventDefault();
     const f = form.elements; save.disabled = true;
-    const est = await run(db.from("estimates").insert({ name: f.name.value.trim(), customer: f.customer.value.trim(),
-      project_id: f.project_id.value || null }).select().single());
+    const est = await run(db.from("estimates").insert({ name: f.name.value.trim(), customer: f.customer.value.trim() }).select().single());
     if (est) await run(db.from("estimate_units").insert({ estimate_id: est.id, name: f.unit_name.value.trim() || "Indoor unit", quantity: num(f.quantity.value), position: 1 }));
     save.disabled = false;
     if (est) { slot.replaceChildren(); say("Estimate created. Add the cost lines for one unit."); await loadEstimates(); openEstimate(est.id); }
@@ -776,19 +881,147 @@ function renderEditor() {
   const focusKey = rememberFocus();
   $("editor").hidden = false;
   $("editor-title").textContent = e.name;
-  const f = $("estimate-form").elements;
-  if (!$("estimate-form").contains(document.activeElement)) {
-    f.name.value = e.name; f.customer.value = e.customer; f.status.value = e.status; f.notes.value = e.notes;
-    f.overhead_pct.value = num(e.overhead_pct); f.indirect_pct.value = num(e.indirect_pct); f.margin_pct.value = num(e.margin_pct);
-    fillProjectSelect(f.project_id, e.project_id);
-  }
+  $("editor-meta").textContent = [e.customer, e.sales_person && "Sales: " + e.sales_person, e.location].filter(Boolean).join(", ")
+    || "Add the customer, sales person and location below.";
+  renderStats(e);
+  fillDetails(e);
   const box = $("units"); box.replaceChildren();
   for (const u of state.units) box.append(unitCard(u));
   if (!state.units.length) box.append(el("p", "empty", "No unit types yet. Add one to start."));
-  renderSummary();
+  renderSummary(calc());
   restoreFocus(focusKey);
 }
 
+function renderStats(e) {
+  const s = $("stats"); s.replaceChildren();
+  const item = (label, value) => { const li = el("li"); li.append(el("span", "", label), el("b", "", value)); s.append(li); };
+  item("Indoor units", fmtQty(e.units));
+  item("Location zone", e.zone_name + " " + fmtPct(e.zone_factor_pct));
+  item("Total cost", fmtMoney(e.total_cost));
+  item("Price with VAT", fmtMoney(e.sales_with_vat));
+}
+
+/* ---------- project details and rates (save when a field is left) ---------- */
+const DETAIL_FIELDS = ["name", "customer", "sales_person", "location", "status", "notes"];
+const RATE_FIELDS = ["overhead_pct", "indirect_pct", "marketing_amount", "margin_pct", "discount_pct", "vat_pct"];
+
+function fillDetails(e) {
+  const d = $("details-form").elements, r = $("rates-form").elements;
+  for (const k of DETAIL_FIELDS) if (document.activeElement !== d[k]) d[k].value = e[k] ?? "";
+  if (document.activeElement !== d.project_id) fillProjectSelect(d.project_id, e.project_id);
+  for (const k of RATE_FIELDS) if (document.activeElement !== r[k]) r[k].value = num(e[k]);
+  const zs = $("zones");
+  zs.querySelectorAll("label").forEach(n => n.remove());
+  for (const z of state.zones) {
+    const lab = el("label", "zone");
+    const inp = el("input"); inp.type = "radio"; inp.name = "zone"; inp.value = z.code; inp.checked = z.code === e.zone; inp.dataset.key = "zone-" + z.code;
+    const top = el("b", "", z.name + " "); top.append(el("em", "", fmtPct(z.factor_pct)));
+    lab.append(inp, top, el("span", "", z.description));
+    zs.append(lab);
+  }
+}
+
+async function saveEstimateField(stateId, patch) {
+  const st = $(stateId); st.className = "save-state"; st.textContent = "Saving…";
+  const { error } = await db.from("estimates").update(patch).eq("id", state.estId);
+  if (error) { st.className = "save-state is-error"; st.textContent = "Couldn't save: " + explain(error); return; }
+  st.textContent = "Saved at " + new Date().toLocaleTimeString("en-GB", { hour: "2-digit", minute: "2-digit" });
+  await loadEstimate();
+}
+
+$("details-form").addEventListener("submit", ev => ev.preventDefault());
+$("rates-form").addEventListener("submit", ev => ev.preventDefault());
+$("details-form").addEventListener("input", ev => { if (ev.target.name === "zone") renderSummary(calc()); });
+$("details-form").addEventListener("change", ev => {
+  const t = ev.target; if (!t.name) return;
+  let v = t.value;
+  if (t.name === "name") { v = v.trim(); if (!v) { t.value = state.est.name; say("The project name can't be empty.", true); return; } }
+  else if (t.name === "project_id") v = v || null;
+  else if (["customer", "sales_person", "location"].includes(t.name)) v = v.trim();
+  saveEstimateField("details-state", { [t.name]: v });
+});
+$("rates-form").addEventListener("input", () => renderSummary(calc()));
+$("rates-form").addEventListener("change", ev => {
+  const t = ev.target; if (!t.name) return;
+  if (t.value === "" || !t.checkValidity()) {
+    const st = $("rates-state"); st.className = "save-state is-error";
+    st.textContent = "Not saved: " + (t.validationMessage || "enter a number") + " The last saved value is still used.";
+    return;
+  }
+  saveEstimateField("rates-state", { [t.name]: Number(t.value) });
+});
+
+/* ---------- live price build-up: the same math as the estimate_summary view ---------- */
+function liveInputs() {
+  const e = state.est, r = $("rates-form").elements, d = $("details-form").elements;
+  const v = {};
+  for (const k of RATE_FIELDS) { const x = r[k]; v[k] = x && x.value !== "" && x.checkValidity() ? Number(x.value) : num(e[k]); }
+  v.zone = (d.zone && d.zone.value) || e.zone;
+  return v;
+}
+
+function calc() {
+  const v = liveInputs(), z = zoneByCode(v.zone);
+  const t = { units: 0, mat_installation: 0, mat_accessories: 0, mat_fittings: 0, material: 0, subcontractor: 0 };
+  for (const s of state.unitSums) {
+    const q = num(s.quantity); t.units += q;
+    for (const k of ["mat_installation", "mat_accessories", "mat_fittings", "material", "subcontractor"]) t[k] += num(s[k]) * q;
+  }
+  const direct_base = t.material + t.subcontractor;
+  const direct = direct_base * num(z.factor_pct) / 100;
+  const overhead = direct * v.overhead_pct / 100;
+  const indirect = direct * v.indirect_pct / 100;
+  const marketing = v.marketing_amount;
+  const total_cost = direct + overhead + indirect + marketing;
+  const sales_price = total_cost / (1 - v.margin_pct / 100);
+  const discount_amount = sales_price * v.discount_pct / 100;
+  const net_sales = sales_price - discount_amount;
+  const vat_amount = net_sales * v.vat_pct / 100;
+  const margin_amount = net_sales - total_cost;
+  return {
+    ...v, ...t, zone_name: z.name, zone_factor_pct: num(z.factor_pct),
+    direct_base, zone_uplift: direct - direct_base, direct, overhead, indirect, marketing, total_cost,
+    sales_price, discount_amount, net_sales, vat_amount, sales_with_vat: net_sales + vat_amount,
+    margin_amount, margin_pct_actual: net_sales > 0 ? margin_amount / net_sales * 100 : null,
+  };
+}
+
+function renderSummary(c) {
+  const box = $("summary"); box.replaceChildren();
+  box.append(el("h3", "", "Price build-up"));
+  box.append(el("p", "sub", fmtQty(c.units) + " indoor units, " + c.zone_name + " zone " + fmtPct(c.zone_factor_pct)
+    + (c.units ? ". Total cost per unit " + fmtMoney(c.total_cost / c.units) : "")));
+  const dl = el("dl", "build");
+  const row = (label, v, cls) => { const d = el("div", cls || ""); d.append(el("dt", "", label), el("dd", "", fmtAmount(v))); dl.append(d); };
+  row("Installation materials", c.mat_installation, "indent");
+  row("Accessories", c.mat_accessories, "indent");
+  row("Fittings", c.mat_fittings, "indent");
+  row("Material", c.material, "strong");
+  row("Subcontractor", c.subcontractor, "strong");
+  row("Direct cost at central prices", c.direct_base, "gap");
+  row("Location uplift, " + c.zone_name + " " + fmtPct(c.zone_factor_pct), c.zone_uplift);
+  row("Direct cost", c.direct, "strong");
+  row("Overhead " + fmtPct(c.overhead_pct) + " of direct", c.overhead, "gap");
+  row("Indirect " + fmtPct(c.indirect_pct) + " of direct", c.indirect);
+  row("Marketing expense", c.marketing);
+  row("Total cost", c.total_cost, "strong");
+  row("Sales price, cost ÷ " + (1 - c.margin_pct / 100).toFixed(2), c.sales_price, "gap");
+  row("Discount " + fmtPct(c.discount_pct), c.discount_amount ? -c.discount_amount : 0);
+  row("Net sales price", c.net_sales, "strong");
+  row("VAT " + fmtPct(c.vat_pct), c.vat_amount);
+  row("Sales price with VAT (EGP)", c.sales_with_vat, "price");
+  box.append(dl);
+  const low = c.margin_pct_actual != null && c.margin_pct_actual < c.margin_pct - 0.005;
+  const mb = el("div", "margin-box");
+  const cell = (label, text) => { const d = el("div"); d.append(el("span", "", label), el("b", low ? "margin-low" : "", text)); mb.append(d); };
+  cell("Margin", fmtMoney(c.margin_amount));
+  cell("Margin % of net price", c.margin_pct_actual == null ? "" : fmtPct(c.margin_pct_actual));
+  box.append(mb);
+  if (low) box.append(el("p", "note margin-low", "The discount takes the margin below the " + fmtPct(c.margin_pct) + " target."));
+  box.append(el("p", "note", "VAT is collected for the tax authority, so it doesn't change cost or margin."));
+}
+
+/* ---------- indoor unit cards ---------- */
 function cellInput(value, key, onSave, step) {
   const i = el("input", "cell-input"); i.type = "number"; i.min = "0"; i.step = step || "any"; i.value = num(value); i.dataset.key = key;
   i.addEventListener("change", () => { if (i.value === "" || Number(i.value) < 0) { i.value = num(value); return; } onSave(Number(i.value)); });
@@ -803,7 +1036,7 @@ function unitCard(u) {
   const nameInput = el("input"); nameInput.value = u.name; nameInput.dataset.key = "uname-" + u.id;
   nameInput.addEventListener("change", () => saveUnit(u.id, { name: nameInput.value.trim() || "Indoor unit" }));
   nameField.append(nameInput);
-  const qtyField = el("label", "field qty", "Number of units");
+  const qtyField = el("label", "field qty", "Number of indoor units");
   const qtyInput = el("input"); qtyInput.type = "number"; qtyInput.min = "0"; qtyInput.step = "1"; qtyInput.value = num(u.quantity); qtyInput.dataset.key = "uqty-" + u.id;
   qtyInput.addEventListener("change", () => { if (qtyInput.value === "" || Number(qtyInput.value) < 0) { qtyInput.value = num(u.quantity); return; } saveUnit(u.id, { quantity: Number(qtyInput.value) }); });
   qtyField.append(qtyInput);
@@ -816,33 +1049,40 @@ function unitCard(u) {
   card.append(head);
 
   const wrap = el("div", "table-wrap"); const t = el("table");
-  t.innerHTML = '<thead><tr><th>Item</th><th>Kind</th><th>Unit</th><th class="num-cell">Qty per indoor unit</th><th class="num-cell">Price (EGP)</th><th class="num-cell">Line total</th><th><span class="visually-hidden">Actions</span></th></tr></thead>';
+  t.innerHTML = '<thead><tr><th>Item</th><th>Unit</th><th class="num-cell">Qty per indoor unit</th><th class="num-cell">Price (EGP)</th><th class="num-cell">Line total</th><th><span class="visually-hidden">Actions</span></th></tr></thead>';
   const body = el("tbody");
-  for (const l of u.estimate_lines) {
-    const item = itemById(l.item_id) || { code: "?", name: "Unknown item", kind: "material", uom: "", unit_price: l.unit_price };
-    const tr = el("tr");
-    const nameCell = el("td"); nameCell.append(el("b", "", item.code + " "), document.createTextNode(item.name));
-    if (num(item.unit_price) !== num(l.unit_price)) nameCell.append(el("div", "tag update", "Price list now " + fmtMoney(item.unit_price)));
-    const kindCell = el("td"); kindCell.append(el("span", "kind " + item.kind, KINDS[item.kind]));
-    const qtyCell = el("td", "num-cell"); qtyCell.append(cellInput(l.qty_per_unit, "lq-" + l.id, v => saveLine(l.id, { qty_per_unit: v })));
-    const priceCell = el("td", "num-cell"); priceCell.append(cellInput(l.unit_price, "lp-" + l.id, v => saveLine(l.id, { unit_price: v }), "0.01"));
-    const rm = el("button", "btn btn-link", "Remove"); rm.type = "button";
-    rm.addEventListener("click", async () => { if (await run(db.from("estimate_lines").delete().eq("id", l.id))) afterEstimateChange(); });
-    const act = el("td"); act.append(rm);
-    tr.append(nameCell, kindCell, el("td", "", item.uom), qtyCell, priceCell, el("td", "num-cell", fmtAmount(num(l.qty_per_unit) * num(l.unit_price))), act);
-    body.append(tr);
+  const lines = u.estimate_lines.map(l => ({ l, item: itemById(l.item_id) || { code: "?", name: "Unknown item", kind: "material", material_group: "installation", uom: "", unit_price: l.unit_price } }));
+  for (const g of Object.keys(GROUPS)) {
+    const mine = lines.filter(x => groupOf(x.item) === g);
+    if (!mine.length) continue;
+    const gr = el("tr", "group-row");
+    const gname = el("td", "", GROUPS[g]); gname.colSpan = 4;
+    gr.append(gname, el("td", "num-cell", fmtAmount(mine.reduce((s, x) => s + num(x.l.qty_per_unit) * num(x.l.unit_price), 0))), el("td"));
+    body.append(gr);
+    for (const { l, item } of mine) {
+      const tr = el("tr");
+      const nameCell = el("td"); nameCell.append(el("b", "", item.code + " "), document.createTextNode(item.name));
+      if (num(item.unit_price) !== num(l.unit_price)) nameCell.append(el("div", "tag update", "Price list now " + fmtMoney(item.unit_price)));
+      const qtyCell = el("td", "num-cell"); qtyCell.append(cellInput(l.qty_per_unit, "lq-" + l.id, v => saveLine(l.id, { qty_per_unit: v })));
+      const priceCell = el("td", "num-cell"); priceCell.append(cellInput(l.unit_price, "lp-" + l.id, v => saveLine(l.id, { unit_price: v }), "0.01"));
+      const rm = el("button", "btn btn-link", "Remove"); rm.type = "button"; rm.setAttribute("aria-label", "Remove " + item.name);
+      rm.addEventListener("click", async () => { if (await run(db.from("estimate_lines").delete().eq("id", l.id))) afterEstimateChange(); });
+      const act = el("td"); act.append(rm);
+      tr.append(nameCell, el("td", "", item.uom), qtyCell, priceCell, el("td", "num-cell", fmtAmount(num(l.qty_per_unit) * num(l.unit_price))), act);
+      body.append(tr);
+    }
   }
-  if (!u.estimate_lines.length) { const td = el("td", "empty", "No cost lines yet. Add the materials and subcontractor work for one indoor unit."); td.colSpan = 7; body.append(el("tr")); body.lastChild.append(td); }
+  if (!lines.length) { const td = el("td", "empty", "No cost lines yet. Add the installation materials, accessories, fittings and subcontractor work for one indoor unit."); td.colSpan = 6; body.append(el("tr")); body.lastChild.append(td); }
   t.append(body); wrap.append(t); card.append(wrap);
 
-  // add a line from the price list
+  // add a line from the price list, grouped the same way
   const add = el("form", "add-line");
   const sel = el("select"); sel.setAttribute("aria-label", "Item to add"); sel.dataset.key = "addsel-" + u.id;
   sel.append(new Option("Choose an item from the price list", ""));
-  for (const k of Object.keys(KINDS)) {
-    const g = document.createElement("optgroup"); g.label = KINDS[k];
-    for (const i of state.items.filter(i => i.active && i.kind === k)) g.append(new Option(`${i.code}  ${i.name}  (${fmtAmount(i.unit_price)} / ${i.uom || "unit"})`, i.id));
-    if (g.children.length) sel.append(g);
+  for (const g of Object.keys(GROUPS)) {
+    const og = document.createElement("optgroup"); og.label = GROUPS[g];
+    for (const i of state.items.filter(i => i.active && groupOf(i) === g)) og.append(new Option(`${i.code}  ${i.name}  (${fmtAmount(i.unit_price)} / ${i.uom || "unit"})`, i.id));
+    if (og.children.length) sel.append(og);
   }
   const qty = el("input", "cell-input"); qty.type = "number"; qty.min = "0"; qty.step = "any"; qty.value = "1"; qty.setAttribute("aria-label", "Quantity per indoor unit");
   const btn = el("button", "btn", "Add line"); btn.type = "submit";
@@ -862,28 +1102,9 @@ function unitCard(u) {
   const cell = (label, v, cls) => { const d = el("div", cls || ""); d.append(el("span", "", label), el("b", "", fmtAmount(v))); return d; };
   foot.append(
     cell("Material per unit", sum.material), cell("Subcontractor per unit", sum.subcontractor),
-    cell("Overhead " + fmtPct(state.est.overhead_pct), sum.overhead), cell("Indirect " + fmtPct(state.est.indirect_pct), sum.indirect),
-    cell("Cost of one unit", sum.unit_cost, "total"), cell("Total for " + fmtQty(u.quantity) + " units", sum.total_cost, "total"));
+    cell("Direct cost per unit", sum.direct_base, "total"), cell("Direct for " + fmtQty(u.quantity) + " units", sum.direct_base_total, "total"));
   card.append(foot);
   return card;
-}
-
-function renderSummary() {
-  const e = state.est, box = $("summary"); box.replaceChildren();
-  box.append(el("h3", "", "Project estimate"));
-  const units = num(e.units);
-  box.append(el("p", "sub", fmtQty(units) + " indoor units" + (units ? ", average cost per unit " + fmtMoney(num(e.project_cost) / units) : "")));
-  const dl = el("dl", "build");
-  const row = (label, v, cls) => { const d = el("div", cls || ""); d.append(el("dt", "", label), el("dd", "", fmtAmount(v))); dl.append(d); };
-  row("Material", e.material);
-  row("Subcontractor", e.subcontractor);
-  row("Direct cost", e.direct, "strong");
-  row("Overhead " + fmtPct(e.overhead_pct), e.overhead);
-  row("Indirect " + fmtPct(e.indirect_pct), e.indirect);
-  row("Project cost", e.project_cost, "strong");
-  row("Margin " + fmtPct(e.margin_pct) + " of price", e.margin_amount);
-  row("Sales price (EGP)", e.sales_price, "price");
-  box.append(dl);
 }
 
 async function saveUnit(id, patch) { if (await run(db.from("estimate_units").update(patch).eq("id", id))) afterEstimateChange(); }
@@ -893,14 +1114,6 @@ async function afterEstimateChange() {
   await db.from("estimates").update({ updated_at: new Date().toISOString() }).eq("id", state.estId);
   await loadEstimate();
 }
-
-$("estimate-form").addEventListener("submit", async ev => {
-  ev.preventDefault();
-  const f = ev.target.elements;
-  const patch = { name: f.name.value.trim(), customer: f.customer.value.trim(), project_id: f.project_id.value || null, status: f.status.value,
-    notes: f.notes.value, overhead_pct: num(f.overhead_pct.value), indirect_pct: num(f.indirect_pct.value), margin_pct: num(f.margin_pct.value) };
-  if (await run(db.from("estimates").update(patch).eq("id", state.estId), "Estimate saved.")) { document.activeElement.blur(); await loadEstimate(); }
-});
 
 $("add-unit").addEventListener("click", async () => {
   const pos = state.units.reduce((m, u) => Math.max(m, u.position), 0) + 1;
@@ -924,7 +1137,7 @@ $("refresh-prices").addEventListener("click", async () => {
   afterEstimateChange();
 });
 
-/* ---------- Excel export (live formulas) ---------- */
+/* ---------- Excel export (live formulas, cached values from the database) ---------- */
 $("export-xlsx").addEventListener("click", () => {
   const e = state.est, ws = {}, cols = 7;
   let r = 0;
@@ -932,53 +1145,65 @@ $("export-xlsx").addEventListener("click", () => {
   const MONEY = "#,##0.00", PCT = "0.00%";
   const put = (c, v, z) => { ws[ref(c, r)] = typeof v === "number" ? { t: "n", v, z } : { t: "s", v: String(v ?? "") }; return ref(c, r); };
   const fx = (c, f, v, z) => { ws[ref(c, r)] = { t: "n", f, v: num(v), z: z || MONEY }; return ref(c, r); };
+  const abs = a => a.replace(/([A-Z]+)(\d+)/, "$$$1$$$2");
 
-  put(0, "Tradex cost estimate"); put(1, e.name); r++;
-  put(0, "Customer"); put(1, e.customer); r++;
-  put(0, "Project"); put(1, e.project_name || ""); r++;
-  put(0, "Status"); put(1, e.status === "final" ? "Final" : "Draft"); r += 2;
-  put(0, "Overhead % of direct cost"); const OH = "$B$" + (r + 1); put(1, num(e.overhead_pct) / 100, PCT); r++;
-  put(0, "Indirect % of direct cost"); const IN = "$B$" + (r + 1); put(1, num(e.indirect_pct) / 100, PCT); r++;
-  put(0, "Margin % of sales price"); const MG = "$B$" + (r + 1); put(1, num(e.margin_pct) / 100, PCT); r += 2;
+  put(0, "Tradex cost estimate"); r++;
+  for (const [label, v] of [["Project name", e.name], ["Customer", e.customer], ["Sales person", e.sales_person], ["Project location", e.location],
+    ["Location zone", e.zone_name], ["Status", e.status === "final" ? "Final" : "Draft"]]) { put(0, label); put(1, v); r++; }
+  r++;
+  put(0, "Zone % of central cost"); const ZF = abs(put(1, num(e.zone_factor_pct) / 100, PCT)); r++;
+  put(0, "Overhead % of direct cost"); const OH = abs(put(1, num(e.overhead_pct) / 100, PCT)); r++;
+  put(0, "Indirect % of direct cost"); const IN = abs(put(1, num(e.indirect_pct) / 100, PCT)); r++;
+  put(0, "Marketing expense"); const MK = abs(put(1, num(e.marketing_amount), MONEY)); r++;
+  put(0, "Target margin % of sales price"); const MG = abs(put(1, num(e.margin_pct) / 100, PCT)); r++;
+  put(0, "Discount % of sales price"); const DS = abs(put(1, num(e.discount_pct) / 100, PCT)); r++;
+  put(0, "VAT %"); const VT = abs(put(1, num(e.vat_pct) / 100, PCT)); r += 2;
 
-  const parts = { mat: [], sub: [], dir: [], oh: [], ind: [], tot: [] };
+  const parts = { installation: [], accessories: [], fittings: [], subcontractor: [] };
   for (const u of state.units) {
     const s = state.unitSums.find(x => x.unit_id === u.id) || {};
     put(0, "Indoor unit type"); put(1, u.name); put(3, "Units"); const Q = ref(4, r); put(4, num(u.quantity), "#,##0"); r++;
-    ["Code", "Item", "Kind", "Unit", "Qty per unit", "Unit price", "Line total"].forEach((h, c) => put(c, h)); r++;
+    ["Code", "Item", "Group", "Unit", "Qty per unit", "Unit price", "Line total"].forEach((h, c) => put(c, h)); r++;
     const first = r + 1;
     for (const l of u.estimate_lines) {
-      const i = itemById(l.item_id) || { code: "?", name: "Unknown item", kind: "material", uom: "" };
-      put(0, i.code); put(1, i.name); put(2, i.kind); put(3, i.uom); put(4, num(l.qty_per_unit), "#,##0.###"); put(5, num(l.unit_price), MONEY);
+      const i = itemById(l.item_id) || { code: "?", name: "Unknown item", kind: "material", material_group: "installation", uom: "" };
+      put(0, i.code); put(1, i.name); put(2, GROUPS[groupOf(i)]); put(3, i.uom); put(4, num(l.qty_per_unit), "#,##0.###"); put(5, num(l.unit_price), MONEY);
       fx(6, `E${r + 1}*F${r + 1}`, num(l.qty_per_unit) * num(l.unit_price)); r++;
     }
     const last = r;
-    const sumKind = k => last >= first ? `SUMIFS(G${first}:G${last},C${first}:C${last},"${k}")` : "0";
-    put(5, "Material per unit"); const M = fx(6, sumKind("material"), s.material); r++;
-    put(5, "Subcontractor per unit"); const S = fx(6, sumKind("subcontractor"), s.subcontractor); r++;
-    put(5, "Direct cost per unit"); const D = fx(6, `${M}+${S}`, s.direct); r++;
-    put(5, "Overhead"); const O = fx(6, `${D}*${OH}`, s.overhead); r++;
-    put(5, "Indirect"); const I = fx(6, `${D}*${IN}`, s.indirect); r++;
-    put(5, "Cost of one unit"); const C = fx(6, `${D}+${O}+${I}`, s.unit_cost); r++;
-    put(5, "Total for all units"); const T = fx(6, `${C}*${Q}`, s.total_cost); r += 2;
-    parts.mat.push(`${M}*${Q}`); parts.sub.push(`${S}*${Q}`); parts.dir.push(`${D}*${Q}`);
-    parts.oh.push(`${O}*${Q}`); parts.ind.push(`${I}*${Q}`); parts.tot.push(T);
+    const sumGroup = g => last >= first ? `SUMIFS(G${first}:G${last},C${first}:C${last},"${GROUPS[g]}")` : "0";
+    const cached = { installation: s.mat_installation, accessories: s.mat_accessories, fittings: s.mat_fittings, subcontractor: s.subcontractor };
+    const cellsOf = {};
+    for (const g of Object.keys(GROUPS)) { put(5, GROUPS[g] + " per unit"); cellsOf[g] = fx(6, sumGroup(g), cached[g]); r++; }
+    put(5, "Direct cost per unit"); const D = fx(6, Object.values(cellsOf).join("+"), s.direct_base); r++;
+    put(5, "Direct for all units"); fx(6, `${D}*${Q}`, s.direct_base_total); r += 2;
+    for (const g of Object.keys(GROUPS)) parts[g].push(`${cellsOf[g]}*${Q}`);
   }
   const join = a => a.length ? a.join("+") : "0";
-  put(0, "Project summary"); r++;
-  put(0, "Material"); fx(1, join(parts.mat), e.material); r++;
-  put(0, "Subcontractor"); fx(1, join(parts.sub), e.subcontractor); r++;
-  put(0, "Direct cost"); fx(1, join(parts.dir), e.direct); r++;
-  put(0, "Overhead"); fx(1, join(parts.oh), e.overhead); r++;
-  put(0, "Indirect"); fx(1, join(parts.ind), e.indirect); r++;
-  put(0, "Project cost"); const PC = fx(1, join(parts.tot), e.project_cost); r++;
-  put(0, "Sales price"); const SP = fx(1, `${PC}/(1-${MG})`, e.sales_price); r++;
-  put(0, "Margin"); const MA = fx(1, `${SP}-${PC}`, e.margin_amount); r++;
-  put(0, "Margin % of sales price"); fx(1, `IF(${SP}=0,0,${MA}/${SP})`, num(e.sales_price) ? num(e.margin_amount) / num(e.sales_price) : 0, PCT); r++;
+  put(0, "Price build-up"); r++;
+  put(0, "Installation materials"); const A1 = fx(1, join(parts.installation), e.mat_installation); r++;
+  put(0, "Accessories"); const A2 = fx(1, join(parts.accessories), e.mat_accessories); r++;
+  put(0, "Fittings"); const A3 = fx(1, join(parts.fittings), e.mat_fittings); r++;
+  put(0, "Material"); const MT = fx(1, `${A1}+${A2}+${A3}`, e.material); r++;
+  put(0, "Subcontractor"); const SB = fx(1, join(parts.subcontractor), e.subcontractor); r++;
+  put(0, "Direct cost at central prices"); const DB = fx(1, `${MT}+${SB}`, e.direct_base); r++;
+  put(0, "Location uplift"); fx(1, `${DB}*(${ZF}-1)`, e.zone_uplift); r++;
+  put(0, "Direct cost"); const DC = fx(1, `${DB}*${ZF}`, e.direct); r++;
+  put(0, "Overhead"); const O = fx(1, `${DC}*${OH}`, e.overhead); r++;
+  put(0, "Indirect"); const I = fx(1, `${DC}*${IN}`, e.indirect); r++;
+  put(0, "Marketing expense"); const MKT = fx(1, MK, e.marketing); r++;
+  put(0, "Total cost"); const TC = fx(1, `${DC}+${O}+${I}+${MKT}`, e.total_cost); r++;
+  put(0, "Sales price"); const SP = fx(1, `${TC}/(1-${MG})`, e.sales_price); r++;
+  put(0, "Discount"); const DI = fx(1, `${SP}*${DS}`, e.discount_amount); r++;
+  put(0, "Net sales price"); const NS = fx(1, `${SP}-${DI}`, e.net_sales); r++;
+  put(0, "VAT"); const VA = fx(1, `${NS}*${VT}`, e.vat_amount); r++;
+  put(0, "Sales price with VAT"); fx(1, `${NS}+${VA}`, e.sales_with_vat); r++;
+  put(0, "Margin"); const MA = fx(1, `${NS}-${TC}`, e.margin_amount); r++;
+  put(0, "Margin % of net sales price"); fx(1, `IF(${NS}=0,0,${MA}/${NS})`, num(e.margin_pct_actual) / 100, PCT); r++;
   r++; put(0, "Built by Salah Agent");
 
   ws["!ref"] = XLSX.utils.encode_range({ s: { r: 0, c: 0 }, e: { r, c: cols - 1 } });
-  ws["!cols"] = [{ wch: 26 }, { wch: 36 }, { wch: 14 }, { wch: 8 }, { wch: 13 }, { wch: 22 }, { wch: 16 }];
+  ws["!cols"] = [{ wch: 30 }, { wch: 36 }, { wch: 22 }, { wch: 8 }, { wch: 13 }, { wch: 30 }, { wch: 16 }];
   const wb = XLSX.utils.book_new();
   XLSX.utils.book_append_sheet(wb, ws, "Estimate");
   XLSX.writeFile(wb, "Tradex estimate - " + e.name.replace(/[\\/:*?"<>|]/g, "-") + ".xlsx");
