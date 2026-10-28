@@ -134,6 +134,7 @@ h1 {
 .toolbar { display: flex; flex-wrap: wrap; gap: .5rem; align-items: center; margin: 0 0 .75rem; }
 .toolbar input[type="search"] { width: auto; flex: 1 1 14rem; }
 .toolbar select { width: auto; }
+.form-grid label.check { display: flex; gap: .5rem; align-items: center; font-size: .9rem; }
 .toolbar label.check { display: inline-flex; gap: .4rem; align-items: center; font-size: .9rem; color: var(--ink-soft); }
 .table-wrap { position: relative; overflow-x: auto;border: 1px solid var(--line); border-radius: 10px; background: var(--card); }
 table { border-collapse: collapse; width: 100%; font-size: .9rem; }
@@ -285,6 +286,7 @@ footer.built { margin-top: 4rem; padding-top: 1.25rem; border-top: 1px solid var
     <div class="tabs" role="tablist">
       <button class="tab" role="tab" id="tab-estimates" aria-controls="view-estimates" aria-selected="true" type="button">Estimates</button>
       <button class="tab" role="tab" id="tab-items" aria-controls="view-items" aria-selected="false" type="button">Price list</button>
+      <button class="tab" role="tab" id="tab-requests" aria-controls="view-requests" aria-selected="false" type="button">Quote requests</button>
     </div>
 
     <!-- Estimates -->
@@ -387,6 +389,38 @@ footer.built { margin-top: 4rem; padding-top: 1.25rem; border-top: 1px solid var
         <thead><tr><th>Code</th><th>Item</th><th>Group</th><th>Unit</th><th class="num-cell">Price</th><th>Status</th><th><span class="visually-hidden">Actions</span></th></tr></thead>
         <tbody id="items-body"></tbody>
       </table></div>
+    </section>
+
+    <!-- Public quote requests -->
+    <section id="view-requests" role="tabpanel" aria-labelledby="tab-requests" hidden>
+      <div class="subhead"><h2>Quote requests</h2>
+        <div class="push"><a class="btn" id="public-link" href="tradex-quote.html" target="_blank" rel="noopener">Open the public quote page</a></div>
+      </div>
+      <p class="msg">Anyone with the public link can price a project and send it here. They see only the final price; they can't see or change your prices, rates or margin.</p>
+
+      <form class="panel" id="qs-form">
+        <h3>Rates used on the public page</h3>
+        <div class="form-grid">
+          <label class="field">Overhead % of direct cost<input name="overhead_pct" type="number" min="0" step="0.01" required></label>
+          <label class="field">Indirect % of direct cost<input name="indirect_pct" type="number" min="0" step="0.01" required></label>
+          <label class="field">Marketing expense per quote (EGP)<input name="marketing_amount" type="number" min="0" step="0.01" required></label>
+          <label class="field">Target margin %<input name="margin_pct" type="number" min="0" max="99.99" step="0.01" required></label>
+          <label class="field">Largest discount a visitor can give %<input name="max_discount_pct" type="number" min="0" max="99.99" step="0.01" required></label>
+          <label class="field">VAT %<input name="vat_pct" type="number" min="0" step="0.01" required></label>
+          <label class="check wide"><input type="checkbox" name="public_enabled"> Public quote page is switched on</label>
+        </div>
+        <p class="save-state" id="qs-state" role="status"></p>
+      </form>
+
+      <div class="toolbar">
+        <label class="visually-hidden" for="req-status">Status</label>
+        <select id="req-status"><option value="">All requests</option><option value="new" selected>New</option><option value="converted">Made into an estimate</option><option value="closed">Closed</option></select>
+      </div>
+      <div class="table-wrap"><table>
+        <thead><tr><th>Received</th><th>Reference</th><th>Project</th><th>Customer</th><th>Contact</th><th>Zone</th><th class="num-cell">Indoor units</th><th class="num-cell">Price with VAT</th><th>Status</th><th><span class="visually-hidden">Actions</span></th></tr></thead>
+        <tbody id="requests-body"></tbody>
+      </table></div>
+      <div id="request-detail"></div>
     </section>
   </div>
 
@@ -583,13 +617,144 @@ const zoneByCode = code => state.zones.find(z => z.code === code) || { code, nam
 
 /* ---------- tabs ---------- */
 function showTab(name) {
-  for (const t of ["estimates", "items"]) {
+  if (name === "requests") loadRequests();
+  for (const t of ["estimates", "items", "requests"]) {
     $("tab-" + t).setAttribute("aria-selected", String(t === name));
     $("view-" + t).hidden = t !== name;
   }
 }
 $("tab-estimates").addEventListener("click", () => showTab("estimates"));
 $("tab-items").addEventListener("click", () => showTab("items"));
+$("tab-requests").addEventListener("click", () => showTab("requests"));
+
+/* ---------- public quote requests and their rates ---------- */
+const REQ_STATUS = { new: "New", converted: "Made into an estimate", closed: "Closed" };
+const QS_FIELDS = ["overhead_pct", "indirect_pct", "marketing_amount", "margin_pct", "max_discount_pct", "vat_pct"];
+state.requests = []; state.qs = null; state.reqId = null;
+
+async function loadRequests() {
+  const [s, r] = await Promise.all([
+    db.from("quote_settings").select("*").maybeSingle(),
+    db.from("quote_requests").select("*").order("created_at", { ascending: false }).limit(500),
+  ]);
+  if (s.error || r.error) { say(explain(s.error || r.error), true); return; }
+  state.qs = s.data; state.requests = r.data;
+  fillQuoteSettings(); renderRequests();
+  if (state.reqId) showRequest(state.requests.find(x => x.id === state.reqId));
+}
+
+function fillQuoteSettings() {
+  const f = $("qs-form").elements, s = state.qs; if (!s) return;
+  for (const k of QS_FIELDS) if (document.activeElement !== f[k]) f[k].value = num(s[k]);
+  f.public_enabled.checked = s.public_enabled;
+}
+$("qs-form").addEventListener("submit", ev => ev.preventDefault());
+$("qs-form").addEventListener("change", async ev => {
+  const t = ev.target; if (!t.name) return;
+  const st = $("qs-state");
+  if (t.type !== "checkbox" && (t.value === "" || !t.checkValidity())) {
+    st.className = "save-state is-error"; st.textContent = "Not saved: " + (t.validationMessage || "enter a number"); return;
+  }
+  st.className = "save-state"; st.textContent = "Saving…";
+  const { error } = await db.from("quote_settings").update({ [t.name]: t.type === "checkbox" ? t.checked : Number(t.value) }).eq("id", true);
+  if (error) { st.className = "save-state is-error"; st.textContent = "Couldn't save: " + explain(error); return; }
+  st.textContent = "Saved at " + new Date().toLocaleTimeString("en-GB", { hour: "2-digit", minute: "2-digit" }) + ". New public quotes use these rates.";
+  const s = await db.from("quote_settings").select("*").maybeSingle(); if (s.data) { state.qs = s.data; fillQuoteSettings(); }
+});
+
+function renderRequests() {
+  const body = $("requests-body"); body.replaceChildren();
+  const st = $("req-status").value;
+  const rows = state.requests.filter(r => !st || r.status === st);
+  if (!rows.length) {
+    const td = el("td", "empty", state.requests.length ? "No requests with this status." : "No requests yet. Share the public quote page link to receive them."); td.colSpan = 10;
+    body.append(el("tr")); body.lastChild.append(td); return;
+  }
+  for (const r of rows) {
+    const tr = el("tr", r.id === state.reqId ? "is-selected" : "");
+    const when = new Date(r.created_at).toLocaleString("en-GB", { day: "numeric", month: "short", year: "numeric", hour: "2-digit", minute: "2-digit" });
+    const open = el("button", "btn btn-link", "View"); open.type = "button"; open.setAttribute("aria-label", "View request " + r.reference);
+    open.addEventListener("click", () => { state.reqId = r.id; renderRequests(); showRequest(r); });
+    const act = el("td"); act.append(open);
+    tr.append(el("td", "", when), el("td", "", r.reference), el("td", "", r.project_name), el("td", "", r.customer),
+      el("td", "", [r.contact_phone, r.contact_email].filter(Boolean).join(", ")), el("td", "", zoneByCode(r.zone).name),
+      el("td", "num-cell", fmtQty(r.quoted.units)), el("td", "num-cell", fmtMoney(r.quoted.sales_with_vat)),
+      el("td", r.status === "new" ? "status-final" : "", REQ_STATUS[r.status]), act);
+    body.append(tr);
+  }
+}
+$("req-status").addEventListener("change", renderRequests);
+
+function showRequest(r) {
+  const slot = $("request-detail"); slot.replaceChildren();
+  if (!r) return;
+  const panel = el("div", "panel");
+  panel.style.marginTop = "1rem";
+  panel.append(el("h3", "", "Request " + r.reference + ": " + r.project_name));
+  const facts = el("dl", "build");
+  const fact = (label, v) => { if (!v && v !== 0) return; const d = el("div"); d.append(el("dt", "", label), el("dd", "", v)); facts.append(d); };
+  fact("Customer", r.customer); fact("Phone", r.contact_phone); fact("Email", r.contact_email); fact("Sales person", r.sales_person);
+  fact("Location", r.location); fact("Zone", zoneByCode(r.zone).name); fact("Discount asked", fmtPct(r.discount_pct));
+  fact("Price before VAT", fmtMoney(r.quoted.net_sales)); fact("Price with VAT", fmtMoney(r.quoted.sales_with_vat));
+  panel.append(facts);
+  for (const u of r.payload.units || []) {
+    panel.append(el("p", "msg", u.name + ", " + fmtQty(u.quantity) + " units"));
+    const wrap = el("div", "table-wrap"); const t = el("table");
+    t.innerHTML = '<thead><tr><th>Item</th><th>Group</th><th class="num-cell">Qty per indoor unit</th></tr></thead>';
+    const body = el("tbody");
+    for (const l of u.lines || []) {
+      const i = itemById(l.item_id);
+      const g = el("td"); if (i) g.append(groupTag(i));
+      const tr = el("tr"); tr.append(el("td", "", i ? i.code + " " + i.name : "Item no longer in the price list"), g, el("td", "num-cell", fmtQty(l.qty)));
+      body.append(tr);
+    }
+    t.append(body); wrap.append(t); panel.append(wrap);
+  }
+  const actions = el("div", "form-actions");
+  if (r.estimate_id) {
+    const go = el("button", "btn btn-primary", "Open its estimate"); go.type = "button";
+    go.addEventListener("click", async () => { showTab("estimates"); await loadEstimates(); openEstimate(r.estimate_id); });
+    actions.append(go);
+  } else {
+    const make = el("button", "btn btn-primary", "Make an estimate from this request"); make.type = "button";
+    make.addEventListener("click", () => requestToEstimate(r, make));
+    actions.append(make);
+  }
+  const statusSel = el("select"); statusSel.setAttribute("aria-label", "Request status");
+  for (const [v, t] of Object.entries(REQ_STATUS)) statusSel.append(new Option(t, v));
+  statusSel.value = r.status;
+  statusSel.addEventListener("change", async () => { if (await run(db.from("quote_requests").update({ status: statusSel.value }).eq("id", r.id), "Status saved.")) loadRequests(); });
+  const del = el("button", "btn btn-danger", "Delete request"); del.type = "button";
+  del.addEventListener("click", async () => {
+    if (!confirm("Delete request " + r.reference + "? The change log keeps a copy.")) return;
+    if (await run(db.from("quote_requests").delete().eq("id", r.id), "Request deleted.")) { state.reqId = null; slot.replaceChildren(); loadRequests(); }
+  });
+  actions.append(statusSel, del);
+  panel.append(actions);
+  slot.append(panel);
+}
+
+// copies the request into a normal estimate at today's price list and the public rates, so the owner can review and adjust it
+async function requestToEstimate(r, btn) {
+  const s = state.qs || {};
+  btn.disabled = true;
+  const est = await run(db.from("estimates").insert({
+    name: r.project_name, customer: r.customer, sales_person: r.sales_person, location: r.location, zone: r.zone,
+    discount_pct: r.discount_pct, overhead_pct: s.overhead_pct ?? 15, indirect_pct: s.indirect_pct ?? 25, margin_pct: s.margin_pct ?? 20,
+    marketing_amount: s.marketing_amount ?? 0, vat_pct: s.vat_pct ?? 14,
+    notes: ["From public quote request " + r.reference, r.contact_phone && "Phone " + r.contact_phone, r.contact_email && "Email " + r.contact_email].filter(Boolean).join(". "),
+  }).select().single());
+  if (!est) { btn.disabled = false; return; }
+  let pos = 0;
+  for (const u of r.payload.units || []) {
+    const unit = await run(db.from("estimate_units").insert({ estimate_id: est.id, name: u.name || "Indoor unit", quantity: num(u.quantity), position: ++pos }).select().single());
+    if (!unit) break;
+    const lines = (u.lines || []).filter(l => itemById(l.item_id)).map((l, k) => ({ unit_id: unit.id, item_id: l.item_id, qty_per_unit: num(l.qty), unit_price: itemById(l.item_id).unit_price, position: k + 1 }));
+    if (lines.length && !(await run(db.from("estimate_lines").insert(lines)))) break;
+  }
+  await run(db.from("quote_requests").update({ status: "converted", estimate_id: est.id }).eq("id", r.id), "Estimate created from " + r.reference + ".");
+  showTab("estimates"); await loadEstimates(); openEstimate(est.id);
+}
 
 /* ---------- price list ---------- */
 async function loadItems() {
